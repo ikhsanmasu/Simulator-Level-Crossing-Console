@@ -132,7 +132,7 @@ class Ui_MainWindow(object):
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
-
+#Tambahan
         self.ALARM.setIconSize(QtCore.QSize(70, 70))
         self.ALARM.setObjectName("alrm")
         MainWindow.setCentralWidget(self.centralwidget)
@@ -148,6 +148,8 @@ class Ui_MainWindow(object):
         self.automaticState = 0
         self.semiautomaticState = 0
         self.manualState = 0
+        self.buzzerState = 0
+        self.ackState = 0
 
         self.iconon = QtGui.QIcon()
         self.iconon.addPixmap(QtGui.QPixmap(dir + "/ICON/toogle-on.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -160,10 +162,18 @@ class Ui_MainWindow(object):
         self.SEMI_AUTOMATIC.clicked.connect(self.switchSEMI)
         self.MANUAL.clicked.connect(self.switchMANUAL)
 
-        print(self.BUZZER_STOP.clicked)
+        self.BUZZER_STOP.pressed.connect(self.buzzerPressed)
+        self.BUZZER_STOP.released.connect(self.buzzerReleased)
+
+        self.ACKNOWLEDGE.pressed.connect(self.ackPressed)
+        self.ACKNOWLEDGE.released.connect(self.ackReleased)
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+    def retranslateUi(self, MainWindow):
+        _translate = QtCore.QCoreApplication.translate
+        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
 
     def switchAUTO(self):
         if self.semiautomaticState == 1:
@@ -171,12 +181,14 @@ class Ui_MainWindow(object):
             self.automaticState = 1
             self.semiautomaticState = 0
             self.manualState = 0
+            self.writeModbus()
 
     def switchSEMI(self):
         self.SELECTOR_SWITCH.setPixmap(QtGui.QPixmap(dir + "/ICON/selector-switch-SEMI AUTOMATIC.png"))
         self.automaticState = 0
         self.semiautomaticState = 1
         self.manualState = 0
+        self.writeModbus()
 
     def switchMANUAL(self):
         if self.semiautomaticState == 1:
@@ -184,6 +196,8 @@ class Ui_MainWindow(object):
             self.automaticState = 0
             self.semiautomaticState = 0
             self.manualState = 1
+            self.writeModbus()
+
 
     def ALARMclicked(self):
         if self.alarmState == 1:
@@ -192,10 +206,27 @@ class Ui_MainWindow(object):
         else:
             self.ALARM.setIcon(self.iconon)
             self.alarmState = 1
+        self.writeModbus()
 
-    def retranslateUi(self, MainWindow):
-        _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+    def buzzerPressed(self):
+        self.buzzerState = 1
+        self.writeModbus()
+
+    def buzzerReleased(self):
+        self.buzzerState = 0
+        self.writeModbus()
+
+    def ackPressed(self):
+        self.backState = 1
+        self.writeModbus()
+
+    def ackReleased(self):
+        self.ackState = 0
+        self.writeModbus()
+
+    def writeModbus(self):
+        print(self.buzzerState)
+
 
 
 if __name__ == "__main__":
