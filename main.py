@@ -19,25 +19,25 @@ dir = os.getcwd()
 #multi threading untuk nyalakan alarm
 class alarmsound(QObject):
     mixer.init()
-    tengm = mixer.Sound(dir + '/ICON/teng.mp3')
-    nongm = mixer.Sound(dir + '/ICON/nong.mp3')
-    teng = pyqtSignal()
+    tengSound = mixer.Sound(dir + '/ICON/teng.mp3')
+    nongSound = mixer.Sound(dir + '/ICON/nong.mp3')
+    teng = pyqtSignal() #kirim signal untuk ganti warna lampu jpl
     nong = pyqtSignal()
 
     def __init__(self):
         super(alarmsound, self).__init__()
         self._start = 0
-
+    #nyalakan alarm ketika dapat perintah start dari tombol alarm dan manual
     def run(self):
         while True:
             while self._start:
                 self.teng.emit()
-                self.tengm.play()
-                time.sleep(self.tengm.get_length())
+                self.tengSound.play()
+                time.sleep(self.tengSound.get_length())
 
                 self.nong.emit()
-                self.nongm.play()
-                time.sleep(self.nongm.get_length())
+                self.nongSound.play()
+                time.sleep(self.nongSound.get_length())
 
     def stop(self):
         self._start = 0
@@ -236,13 +236,15 @@ class Ui_MainWindow(object):
         self.RIGHT_JPL_R.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
         self.RIGHT_JPL_R.setScaledContents(True)
         self.RIGHT_JPL_R.setObjectName("RIGHT_JPL_R")
-
+        #tambahan selain dari qt
         self.alarmState = 0
-        self.automaticState = 0
+        self.automaticState = 1
         self.semiautomaticState = 0
         self.manualState = 0
         self.buzzerState = 0
         self.ackState = 0
+        self.jplUPposisition = 1
+        self.jplDNposisition = 0
 
         self.threadAlarm = QThread()
         self.bunyiAlarm = alarmsound()
@@ -269,7 +271,28 @@ class Ui_MainWindow(object):
         self.ACKNOWLEDGE.pressed.connect(self.ackPressed)
         self.ACKNOWLEDGE.released.connect(self.ackReleased)
 
+        self.BRAKE.pressed.connect(self.brakePressed)
+        self.BRAKE.released.connect(self.brakeReleased)
+
+        # self.checkThreadTimer = QtCore.QTimer()
+        # self.checkThreadTimer.setInterval(500)
+        # self.checkThreadTimer.timeout.connect(self.tes)
+        # self.checkThreadTimer.start()
+
+        self.bukaPerintang = 0
+        self.tutupPerintang = 0
+        self.rem = 0
+        self.posisiJPL = 0
+        self.timerJpl = QtCore.QTimer()
+        self.timerJpl.setInterval(1000)
+        self.timerJpl.timeout.connect(self.updateJPL)
+        self.timerJpl.start()
+
+        self.CLOSE_BARRIER.clicked.connect(self.closeBRClicked)
+        self.OPEN_BARIER.clicked.connect(self.openBRClicked)
+
         self.retranslateUi(MainWindow)
+
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -283,6 +306,41 @@ class Ui_MainWindow(object):
         self.label.setText(_translate("MainWindow", "ACK DO"))
         self.label_2.setText(_translate("MainWindow", "PANEL TBI"))
 
+    def tes(self):
+        print("tes")
+
+    def closeBRClicked(self):
+        if not self.automaticState:
+            self.tutupPerintang= 1
+
+    def openBRClicked(self):
+        if not self.automaticState:
+            self.bukaPerintang = 1
+
+    def brakePressed(self):
+        self.rem = 1
+    def brakeReleased(self):
+        self.rem = 0
+
+    def updateJPL(self):
+        self.JPL_KIRI.setPixmap(QtGui.QPixmap(dir + "/ICON/LEFT-JPL-" + str(self.posisiJPL) + ".png"))
+        self.JPL_KANAN.setPixmap(QtGui.QPixmap(dir + "/ICON/RIGHT-JPL-" + str(self.posisiJPL) + ".png"))
+
+        if self.posisiJPL >= 0 and self.posisiJPL < 9 and self.tutupPerintang and not self.rem:
+            self.posisiJPL += 1
+        elif self.posisiJPL > 0 and self.posisiJPL <= 9 and self.bukaPerintang and not self.rem:
+            self.posisiJPL -= 1
+
+        if self.posisiJPL == 0:
+            self.jplUPposisition = 1
+            self.bukaPerintang = 0
+        if self.posisiJPL == 9:
+            self.jplDNposisition = 1
+            self.tutupPerintang = 0
+        if self.posisiJPL > 0 and self.posisiJPL < 9 :
+            self.jplUPposisition = 0
+            self.jplDNposisition = 0
+
     def flip(self):
         self.LEFT_JPL_L.setPixmap(QtGui.QPixmap(dir + "/ICON/led-red-on.png"))
         self.LEFT_JPL_R.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
@@ -295,13 +353,14 @@ class Ui_MainWindow(object):
         self.RIGHT_JPL_R.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
 
 
-    def alarmStopped(self):
+    def matikanLampuJPL(self):
         self.LEFT_JPL_L.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
         self.LEFT_JPL_R.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
         self.RIGHT_JPL_L.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
         self.RIGHT_JPL_R.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
 
     def switchAUTO(self):
+        self.matikanLampuJPL()
         if self.semiautomaticState == 1:
             self.SELECTOR_SWITCH.setPixmap(QtGui.QPixmap(dir + "/ICON/selector-switch-AUTOMATIC.png"))
             self.automaticState = 1
@@ -315,9 +374,10 @@ class Ui_MainWindow(object):
         self.semiautomaticState = 1
         self.manualState = 0
         self.writeModbus()
+        self.matikanLampuJPL()
         if self.alarmState:
             self.bunyiAlarm.stop()
-            self.alarmStopped()
+
 
     def switchMANUAL(self):
         if self.semiautomaticState == 1:
@@ -333,6 +393,7 @@ class Ui_MainWindow(object):
         #toogle alarm on atau off
         if self.alarmState == 1:
             self.ALARM.setIcon(self.iconalarmoff)
+            self.matikanLampuJPL()
             self.alarmState = 0
         else:
             self.ALARM.setIcon(self.iconalarmon)
@@ -343,7 +404,6 @@ class Ui_MainWindow(object):
             self.bunyiAlarm.start()
         else:
             self.bunyiAlarm.stop()
-            self.alarmStopped()
         self.writeModbus()
 
     def buzzerPressed(self):
@@ -363,7 +423,7 @@ class Ui_MainWindow(object):
         self.writeModbus()
 
     def writeModbus(self):
-        print(self.buzzerState)
+        pass
 
 if __name__ == "__main__":
     import sys
