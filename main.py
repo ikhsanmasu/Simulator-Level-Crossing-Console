@@ -10,17 +10,44 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 import os
+import time
+from pygame import mixer  # Load the popular external library
+from PyQt5.QtCore import QObject, QThread, pyqtSignal, QTimer
 
 dir = os.getcwd()
 
-#input variable
-alarmState = 0
-automaticState = 0
-semiautomaticState = 0
-manualState = 0
+#multi threading untuk nyalakan alarm
+class alarmsound(QObject):
+    mixer.init()
+    tengm = mixer.Sound(dir + '/ICON/teng.mp3')
+    nongm = mixer.Sound(dir + '/ICON/nong.mp3')
+    teng = pyqtSignal()
+    nong = pyqtSignal()
+
+    def __init__(self):
+        super(alarmsound, self).__init__()
+        self._start = 0
+
+    def run(self):
+        while True:
+            while self._start:
+                self.teng.emit()
+                self.tengm.play()
+                time.sleep(self.tengm.get_length())
+
+                self.nong.emit()
+                self.nongm.play()
+                time.sleep(self.nongm.get_length())
+
+    def stop(self):
+        self._start = 0
+
+    def start(self):
+        self._start = 1
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
+
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1351, 871)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -102,7 +129,7 @@ class Ui_MainWindow(object):
         self.ALARM.setGeometry(QtCore.QRect(496, 212, 75, 71))
         self.ALARM.setText("")
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(dir + "/ICON/toogle-on.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap(dir + "/ICON/toogle-off.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.ALARM.setIcon(icon)
         self.ALARM.setIconSize(QtCore.QSize(70, 70))
         self.ALARM.setObjectName("ALARM")
@@ -151,12 +178,12 @@ class Ui_MainWindow(object):
         self.ABCD_HDL.setGeometry(QtCore.QRect(20, 70, 93, 28))
         self.ABCD_HDL.setStyleSheet("background-color: rgb(204, 204, 204);")
         self.ABCD_HDL.setObjectName("ABCD_HDL")
-        self.ACK_DI = QtWidgets.QLabel(self.frame)
-        self.ACK_DI.setGeometry(QtCore.QRect(20, 104, 21, 21))
-        self.ACK_DI.setText("")
-        self.ACK_DI.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
-        self.ACK_DI.setScaledContents(True)
-        self.ACK_DI.setObjectName("ACK_DI")
+        self.ACK_REQUEST_DO = QtWidgets.QLabel(self.frame)
+        self.ACK_REQUEST_DO.setGeometry(QtCore.QRect(20, 104, 21, 21))
+        self.ACK_REQUEST_DO.setText("")
+        self.ACK_REQUEST_DO.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
+        self.ACK_REQUEST_DO.setScaledContents(True)
+        self.ACK_REQUEST_DO.setObjectName("ACK_REQUEST_DO")
         self.label = QtWidgets.QLabel(self.frame)
         self.label.setGeometry(QtCore.QRect(50, 107, 47, 13))
         self.label.setObjectName("label")
@@ -173,6 +200,43 @@ class Ui_MainWindow(object):
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
 
+        self.JPL_KIRI = QtWidgets.QLabel(self.centralwidget)
+        self.JPL_KIRI.setGeometry(QtCore.QRect(630, 319, 181, 161))
+        self.JPL_KIRI.setText("")
+        self.JPL_KIRI.setPixmap(QtGui.QPixmap(dir + "/ICON/LEFT-JPL-0.png"))
+        self.JPL_KIRI.setScaledContents(True)
+        self.JPL_KIRI.setObjectName("JPL_KIRI")
+        self.JPL_KANAN = QtWidgets.QLabel(self.centralwidget)
+        self.JPL_KANAN.setGeometry(QtCore.QRect(540, 494, 181, 161))
+        self.JPL_KANAN.setText("")
+        self.JPL_KANAN.setPixmap(QtGui.QPixmap(dir + "/ICON/RIGHT-JPL-0.png"))
+        self.JPL_KANAN.setScaledContents(True)
+        self.JPL_KANAN.setObjectName("JPL_KANAN")
+        self.LEFT_JPL_R = QtWidgets.QLabel(self.centralwidget)
+        self.LEFT_JPL_R.setGeometry(QtCore.QRect(762, 405, 10, 10))
+        self.LEFT_JPL_R.setText("")
+        self.LEFT_JPL_R.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
+        self.LEFT_JPL_R.setScaledContents(True)
+        self.LEFT_JPL_R.setObjectName("LEFT_JPL_R")
+        self.LEFT_JPL_L = QtWidgets.QLabel(self.centralwidget)
+        self.LEFT_JPL_L.setGeometry(QtCore.QRect(741, 405, 10, 10))
+        self.LEFT_JPL_L.setText("")
+        self.LEFT_JPL_L.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
+        self.LEFT_JPL_L.setScaledContents(True)
+        self.LEFT_JPL_L.setObjectName("LEFT_JPL_L")
+        self.RIGHT_JPL_L = QtWidgets.QLabel(self.centralwidget)
+        self.RIGHT_JPL_L.setGeometry(QtCore.QRect(579, 580, 10, 10))
+        self.RIGHT_JPL_L.setText("")
+        self.RIGHT_JPL_L.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
+        self.RIGHT_JPL_L.setScaledContents(True)
+        self.RIGHT_JPL_L.setObjectName("RIGHT_JPL_L")
+        self.RIGHT_JPL_R = QtWidgets.QLabel(self.centralwidget)
+        self.RIGHT_JPL_R.setGeometry(QtCore.QRect(601, 580, 10, 10))
+        self.RIGHT_JPL_R.setText("")
+        self.RIGHT_JPL_R.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
+        self.RIGHT_JPL_R.setScaledContents(True)
+        self.RIGHT_JPL_R.setObjectName("RIGHT_JPL_R")
+
         self.alarmState = 0
         self.automaticState = 0
         self.semiautomaticState = 0
@@ -180,11 +244,19 @@ class Ui_MainWindow(object):
         self.buzzerState = 0
         self.ackState = 0
 
-        self.iconon = QtGui.QIcon()
-        self.iconon.addPixmap(QtGui.QPixmap(dir + "/ICON/toogle-on.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.iconoff = QtGui.QIcon()
-        self.iconoff.addPixmap(QtGui.QPixmap(dir + "/ICON/toogle-off.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.ALARM.setIcon(self.iconon)
+        self.threadAlarm = QThread()
+        self.bunyiAlarm = alarmsound()
+        self.bunyiAlarm.moveToThread(self.threadAlarm)
+        self.threadAlarm.started.connect(self.bunyiAlarm.run)
+        self.bunyiAlarm.teng.connect(self.flip)
+        self.bunyiAlarm.nong.connect(self.flop)
+        self.threadAlarm.start()
+
+        self.iconalarmon = QtGui.QIcon()
+        self.iconalarmon.addPixmap(QtGui.QPixmap(dir + "/ICON/toogle-on.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.iconalarmoff = QtGui.QIcon()
+        self.iconalarmoff.addPixmap(QtGui.QPixmap(dir + "/ICON/toogle-off.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.ALARM.setIcon(self.iconalarmoff)
         self.ALARM.clicked.connect(self.ALARMclicked)
 
         self.AUTOMATIC.clicked.connect(self.switchAUTO)
@@ -208,9 +280,26 @@ class Ui_MainWindow(object):
         self.ZP3.setText(_translate("MainWindow", "ZP3"))
         self.ACK_REQUEST.setText(_translate("MainWindow", "ACK REQUEST"))
         self.ABCD_HDL.setText(_translate("MainWindow", "A/B/C/D-HDL-DI"))
-        self.label.setText(_translate("MainWindow", "ACK DI"))
+        self.label.setText(_translate("MainWindow", "ACK DO"))
         self.label_2.setText(_translate("MainWindow", "PANEL TBI"))
 
+    def flip(self):
+        self.LEFT_JPL_L.setPixmap(QtGui.QPixmap(dir + "/ICON/led-red-on.png"))
+        self.LEFT_JPL_R.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
+        self.RIGHT_JPL_L.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
+        self.RIGHT_JPL_R.setPixmap(QtGui.QPixmap(dir + "/ICON/led-red-on.png"))
+    def flop(self):
+        self.LEFT_JPL_L.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
+        self.LEFT_JPL_R.setPixmap(QtGui.QPixmap(dir + "/ICON/led-red-on.png"))
+        self.RIGHT_JPL_L.setPixmap(QtGui.QPixmap(dir + "/ICON/led-red-on.png"))
+        self.RIGHT_JPL_R.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
+
+
+    def alarmStopped(self):
+        self.LEFT_JPL_L.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
+        self.LEFT_JPL_R.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
+        self.RIGHT_JPL_L.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
+        self.RIGHT_JPL_R.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
 
     def switchAUTO(self):
         if self.semiautomaticState == 1:
@@ -226,6 +315,9 @@ class Ui_MainWindow(object):
         self.semiautomaticState = 1
         self.manualState = 0
         self.writeModbus()
+        if self.alarmState:
+            self.bunyiAlarm.stop()
+            self.alarmStopped()
 
     def switchMANUAL(self):
         if self.semiautomaticState == 1:
@@ -234,15 +326,24 @@ class Ui_MainWindow(object):
             self.semiautomaticState = 0
             self.manualState = 1
             self.writeModbus()
-
+            if self.alarmState and self.manualState:
+                self.bunyiAlarm.start()
 
     def ALARMclicked(self):
+        #toogle alarm on atau off
         if self.alarmState == 1:
-            self.ALARM.setIcon(self.iconoff)
+            self.ALARM.setIcon(self.iconalarmoff)
             self.alarmState = 0
         else:
-            self.ALARM.setIcon(self.iconon)
+            self.ALARM.setIcon(self.iconalarmon)
             self.alarmState = 1
+
+        #alarm hanya bisa dinyalakan lewat toogle switch saat operasi manual
+        if self.alarmState and self.manualState:
+            self.bunyiAlarm.start()
+        else:
+            self.bunyiAlarm.stop()
+            self.alarmStopped()
         self.writeModbus()
 
     def buzzerPressed(self):
@@ -263,8 +364,6 @@ class Ui_MainWindow(object):
 
     def writeModbus(self):
         print(self.buzzerState)
-
-
 
 if __name__ == "__main__":
     import sys
