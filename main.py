@@ -103,12 +103,6 @@ class Ui_MainWindow(object):
         self.CLOSE_BARRIER.setText("")
         self.CLOSE_BARRIER.setFlat(True)
         self.CLOSE_BARRIER.setObjectName("CLOSE_BARRIER")
-        self.BUZZER = QtWidgets.QLabel(self.centralwidget)
-        self.BUZZER.setGeometry(QtCore.QRect(423, 633, 41, 41))
-        self.BUZZER.setText("")
-        self.BUZZER.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
-        self.BUZZER.setScaledContents(True)
-        self.BUZZER.setObjectName("BUZZER")
         self.COMMUNICATION = QtWidgets.QLabel(self.centralwidget)
         self.COMMUNICATION.setGeometry(QtCore.QRect(844, 287, 21, 21))
         self.COMMUNICATION.setText("")
@@ -266,10 +260,10 @@ class Ui_MainWindow(object):
 
         # variable indikasi F30
         self.buzzerDO = 0
-        self.alarmDO = 0
+        self.alarmDO = 1
         self.dirWarDO = 0
         self.dirEarDO = 0
-        self.BRUPDO = 0
+        self.BRUPDO = 1
         self.BRDNDO = 0
         self.COMMDO = 0
         self.ackDO = 0
@@ -277,34 +271,16 @@ class Ui_MainWindow(object):
         # variable perintah ke F30
         self.ackConsoleDI = 0
         self.buzzerStopDI = 0
-        self.brAutoDI = 0
+        self.brAutoDI = 1
         self.brSemiAutoDI = 0
         self.brManualDI = 0
-        self.brPosUPDI = 0
+        self.brPosUPDI = 1
         self.brPosDNDI = 0
         self.ackTBIDI = 0
         self.ZP1DI = 0
         self.ZP2DI = 0
         self.ZP3DI = 0
         self.ABCDHDLDI = 0
-
-        # variable indikasi console
-        self.ackConsole = 0
-        self.buzzerStop = 0
-        self.directionAState = 0
-        self.directionBState = 0
-        self.brAuto = 1
-        self.brSemiAuto = 0
-        self.brManual = 0
-        self.brPosUP = 1
-        self.brPosDN = 0
-        self.ackTBI = 0
-
-        # variable Push Button Console
-        self.ZP1PB = 0
-        self.ZP2PB = 0
-        self.ZP3PB = 0
-        self.ABCDHDLPB = 0
 
         #variable internal
         self.powerState = 1 # keadaan power
@@ -314,21 +290,18 @@ class Ui_MainWindow(object):
         self.rem = 0 # perintah rem perintang
         self.derajatJPL = 0 # posisi JPL diwakilkan angka 0-9 mengartikan posisi per 10 derajat
 
-        # miltithreading untuk bunyi alarm, threading selalu aktif hanya perintah bunyinya yang di kendalikan
-        self.threadAlarm = QThread()
-        self.bunyiAlarm = alarmSoundEfect()
-        self.bunyiAlarm.moveToThread(self.threadAlarm)
-        self.threadAlarm.started.connect(self.bunyiAlarm.run)
-        self.bunyiAlarm.teng.connect(self.flipLampuJPL)
-        self.bunyiAlarm.nong.connect(self.flopLampuJPL)
-        self.threadAlarm.start()
+        # 1. ACK
+        self.ACKNOWLEDGE.pressed.connect(self.ackConsolePressed)
+        self.ACKNOWLEDGE.released.connect(self.ackConsoleReleased)
 
-        # miltithreading untuk bunyi buzzer, threading selalu aktif hanya perintah bunyinya yang di kendalikan
+        # 2. Buzzer miltithreading, threading selalu aktif hanya perintah bunyinya yang dikendalikan
         self.threadBuzzer = QThread()
         self.bunyiBuzzer= buzzerSoundEfect()
         self.bunyiBuzzer.moveToThread(self.threadBuzzer)
         self.threadBuzzer.started.connect(self.bunyiBuzzer.run)
         self.threadBuzzer.start()
+        self.BUZZER_STOP.pressed.connect(self.buzzerPressed)
+        self.BUZZER_STOP.released.connect(self.buzzerReleased)
 
         self.iconalarmOn = QtGui.QIcon()
         self.iconalarmOn.addPixmap(QtGui.QPixmap(dir + "/ICON/toogle-on.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -337,32 +310,39 @@ class Ui_MainWindow(object):
         self.ALARM.setIcon(self.iconalarmOff)
         self.ALARM.clicked.connect(self.ALARMclicked)
 
+        # 3. 4. 5.
         self.AUTOMATIC.clicked.connect(self.switchAUTO)
         self.SEMI_AUTOMATIC.clicked.connect(self.switchSEMI)
         self.MANUAL.clicked.connect(self.switchMANUAL)
 
-        self.BUZZER_STOP.pressed.connect(self.buzzerPressed)
-        self.BUZZER_STOP.released.connect(self.buzzerReleased)
-
-        self.ACKNOWLEDGE.pressed.connect(self.ackPressed)
-        self.ACKNOWLEDGE.released.connect(self.ackReleased)
-
+        # 6. timer update animasi JPL
+        self.timerJpl = QtCore.QTimer()
+        self.timerJpl.setInterval(1000)
+        self.timerJpl.timeout.connect(self.updateJPL)
+        self.timerJpl.start()
         self.BRAKE.pressed.connect(self.brakePressed)
         self.BRAKE.released.connect(self.brakeReleased)
+        self.CLOSE_BARRIER.clicked.connect(self.closeBRClicked)
+        self.OPEN_BARIER.clicked.connect(self.openBRClicked)
+
+        # 7. simulasi ACK dari TBI
+        # 8. 9. 10. simulasi Kontak Rel
+        # 11. HDL DI
 
         #timer update indikasi console
         self.timerINDConsole = QtCore.QTimer()
         self.timerINDConsole.setInterval(100)
         self.timerINDConsole.timeout.connect(self.updateINDConsole)
         self.timerINDConsole.start()
-        #timer update animasi JPL
-        self.timerJpl = QtCore.QTimer()
-        self.timerJpl.setInterval(1000)
-        self.timerJpl.timeout.connect(self.updateJPL)
-        self.timerJpl.start()
 
-        self.CLOSE_BARRIER.clicked.connect(self.closeBRClicked)
-        self.OPEN_BARIER.clicked.connect(self.openBRClicked)
+        # miltithreading untuk bunyi alarm, threading selalu aktif hanya perintah bunyinya yang di kendalikan
+        self.threadAlarm = QThread()
+        self.bunyiAlarm = alarmSoundEfect()
+        self.bunyiAlarm.moveToThread(self.threadAlarm)
+        self.threadAlarm.started.connect(self.bunyiAlarm.run)
+        self.bunyiAlarm.teng.connect(self.flipLampuJPL)
+        self.bunyiAlarm.nong.connect(self.flopLampuJPL)
+        self.threadAlarm.start()
 
         self.retranslateUi(MainWindow)
 
@@ -389,7 +369,7 @@ class Ui_MainWindow(object):
     # 7. Barier DN = JPL terdeteksi posisi bawah
     # 8. Communication = komunikasi?
     # 9. Power = ?
-    # 10. Buzzer
+    # 10. Buzzer = bunyi buzzer dari perintah F30
     def updateINDConsole(self):
         # 1. ACK-DO
         if self.ackDO:
@@ -407,15 +387,15 @@ class Ui_MainWindow(object):
         else:
             self.DIRECTION_B.setPixmap(QtGui.QPixmap(dir + "/ICON/direction-b-off"))
         #5
-        if not self.alarmState or self.brSemiAuto or self.brAuto:
+        if not self.alarmState or self.brSemiAutoDI or self.brAutoDI:
             self.matikanLampuJPL()
         # 6. Barier UP
-        if self.brPosUP:
+        if self.brPosUPDI:
             self.BARIER_UP.setPixmap(QtGui.QPixmap(dir + "/ICON/led-yellow-on.png"))
         else:
             self.BARIER_UP.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
         # 7. Barier DOWN
-        if self.brPosDN:
+        if self.brPosDNDI:
             self.BARIER_DOWN.setPixmap(QtGui.QPixmap(dir + "/ICON/led-yellow-on.png"))
         else:
             self.BARIER_DOWN.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
@@ -447,14 +427,14 @@ class Ui_MainWindow(object):
 
         # logika posisi JPL UP atau DN
         if self.derajatJPL == 0:
-            self.brPosUP = 1
+            self.brPosUPDI = 1
             self.bukaPerintang = 0
         if self.derajatJPL == 9:
-            self.brPosDN = 1
+            self.brPosDNDI = 1
             self.tutupPerintang = 0
         if self.derajatJPL > 0 and self.derajatJPL < 9 :
-            self.brPosUP = 0
-            self.brPosDN = 0
+            self.brPosUPDI = 0
+            self.brPosDNDI = 0
     # 5. Lampu JPL
     def flipLampuJPL(self):
         self.Lampu_JPLAtas_L.setPixmap(QtGui.QPixmap(dir + "/ICON/led-red-on.png"))
@@ -472,54 +452,95 @@ class Ui_MainWindow(object):
         self.Lampu_JPLBawah_L.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
         self.Lampu_JPLBawah_R.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
 
-    def tes(self):
-        print("tes")
+    # list pengolahan push button console
+    # 1. ACK Console PB DI
+    # 2. Buzzer PB DI
+    # 3. Mode Auto
+    # 4. Mode Semi Auto
+    # 5. Mode Manual
+    # 6. Posisi JPL UP
+    # 7. Posisi JPL DN
+    # 8. ACK dari TBI PB DI
+    # 9. triger ZP1
+    # 10. triger ZP2
+    # 11. triger ZP3
+    # 12. HDL DI atau informasi langsungan
 
-    def closeBRClicked(self):
-        if not self.brAuto:
-            self.tutupPerintang= 1
+    # 1. ACK Console PB DI
+    def ackConsolePressed(self):
+        self.ackConsoleDI = 1
+    def ackConsoleReleased(self):
+        self.ackConsoleDI  = 0
 
-    def openBRClicked(self):
-        if not self.brAuto:
-            self.bukaPerintang = 1
+    # 2. Buzzer PB DI
+    def buzzerPressed(self):
+        self.buzzerStopDI = 1
+    def buzzerReleased(self):
+        self.buzzerStopDI = 0
 
-    def brakePressed(self):
-        self.rem = 1
-    def brakeReleased(self):
-        self.rem = 0
-
+    # 3. Mode Auto
     def switchAUTO(self):
         self.matikanLampuJPL()
         self.tutupPerintang = 0
         self.bukaPerintang = 0
-        if self.brSemiAuto == 1:
+        if self.brSemiAutoDI == 1:
             self.SELECTOR_SWITCH.setPixmap(QtGui.QPixmap(dir + "/ICON/selector-switch-AUTOMATIC.png"))
-            self.brAuto = 1
-            self.brSemiAuto = 0
-            self.brManual = 0
-            self.writeModbus()
+            self.brAutoDI = 1
+            self.brSemiAutoDI = 0
+            self.brManualDI = 0
 
+    # 4. Mode Semi Auto
     def switchSEMI(self):
         self.matikanLampuJPL()
         self.SELECTOR_SWITCH.setPixmap(QtGui.QPixmap(dir + "/ICON/selector-switch-SEMI AUTOMATIC.png"))
-        self.brAuto = 0
-        self.brSemiAuto = 1
-        self.brManual = 0
-        self.writeModbus()
+        self.brAutoDI = 0
+        self.brSemiAutoDI = 1
+        self.brManualDI = 0
         if self.alarmState:
             self.bunyiAlarm.bunyiAlarmStop()
 
-
+    # 5. Mode Manual
     def switchMANUAL(self):
-        if self.brSemiAuto == 1:
+        if self.brSemiAutoDI == 1:
             self.SELECTOR_SWITCH.setPixmap(QtGui.QPixmap(dir + "/ICON/selector-switch-MANUAL.png"))
-            self.brAuto = 0
-            self.brSemiAuto = 0
-            self.brManual = 1
-            self.writeModbus()
-            if self.alarmState and self.brManual:
+            self.brAutoDI = 0
+            self.brSemiAutoDI = 0
+            self.brManualDI = 1
+            if self.alarmState and self.brManualDI:
                 self.bunyiAlarm.bunyiAlarmStart()
 
+    # 8. ACK dari TBI
+    def ackTBIPressed(self):
+        self.ackTBIDI = 1
+    def ackTBIReleased(self):
+        self.ackTBIDI = 0
+
+    # 9. triger ZP1
+    def ZP1Pressed(self):
+        self.ZP1DI = 1
+    def ZP1Released(self):
+        self.ZP1DI = 0
+
+    # 10. triger ZP2
+    def ZP1Pressed(self):
+        self.ZP2DI = 1
+    def ZP1Released(self):
+        self.ZP2DI = 0
+
+    # 11. triger ZP3
+    def ZP3Pressed(self):
+        self.ZP3DI = 1
+    def ZP3Released(self):
+        self.ZP3DI = 0
+
+    # 12. HDL DI / informasi kereta langsungan
+    def HDLPressed(self):
+        self.ABCDHDLDI = 1
+    def HDLReleased(self):
+        self.ABCDHDLDI = 0
+
+    # logic internal console
+    # nyala mati alarm ketika mode manual
     def ALARMclicked(self):
         #toogle alarm on atau off
         if self.alarmState == 1:
@@ -530,27 +551,23 @@ class Ui_MainWindow(object):
             self.alarmState = 1
 
         #alarm hanya bisa dinyalakan lewat toogle switch saat operasi manual
-        if self.alarmState and self.brManual:
+        if self.alarmState and self.brManualDI:
             self.bunyiAlarm.bunyiAlarmStart()
         else:
             self.bunyiAlarm.bunyiAlarmStop()
         self.writeModbus()
 
-    def buzzerPressed(self):
-        self.buzzerStop = 1
-        self.writeModbus()
-
-    def buzzerReleased(self):
-        self.buzzerStop = 0
-        self.writeModbus()
-
-    def ackPressed(self):
-        self.backState = 1
-        self.writeModbus()
-
-    def ackReleased(self):
-        self.ackConsole = 0
-        self.writeModbus()
+    #mapping tutup buka rem perintang
+    def closeBRClicked(self):
+        if not self.brAutoDI:
+            self.tutupPerintang= 1
+    def openBRClicked(self):
+        if not self.brAutoDI:
+            self.bukaPerintang = 1
+    def brakePressed(self):
+        self.rem = 1
+    def brakeReleased(self):
+        self.rem = 0
 
     def writeModbus(self):
         pass
