@@ -1,0 +1,588 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1351</width>
+    <height>871</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QLabel" name="CONSOLE">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>1351</width>
+      <height>831</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="pixmap">
+     <pixmap>../ICON/Console.jpg</pixmap>
+    </property>
+    <property name="scaledContents">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="ACKNOWLEDGE">
+    <property name="geometry">
+     <rect>
+      <x>837</x>
+      <y>686</y>
+      <width>60</width>
+      <height>60</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="flat">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="BRAKE">
+    <property name="geometry">
+     <rect>
+      <x>1021</x>
+      <y>686</y>
+      <width>60</width>
+      <height>60</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="flat">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="OPEN_BARIER">
+    <property name="geometry">
+     <rect>
+      <x>1116</x>
+      <y>686</y>
+      <width>60</width>
+      <height>60</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="flat">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="CLOSE_BARRIER">
+    <property name="geometry">
+     <rect>
+      <x>1211</x>
+      <y>686</y>
+      <width>60</width>
+      <height>60</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="flat">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="COMMUNICATION">
+    <property name="geometry">
+     <rect>
+      <x>844</x>
+      <y>287</y>
+      <width>21</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="pixmap">
+     <pixmap>../ICON/led-off.png</pixmap>
+    </property>
+    <property name="scaledContents">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="BARIER_DOWN">
+    <property name="geometry">
+     <rect>
+      <x>844</x>
+      <y>227</y>
+      <width>21</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="pixmap">
+     <pixmap>../ICON/led-off.png</pixmap>
+    </property>
+    <property name="scaledContents">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="BARIER_UP">
+    <property name="geometry">
+     <rect>
+      <x>844</x>
+      <y>197</y>
+      <width>21</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="pixmap">
+     <pixmap>../ICON/led-off.png</pixmap>
+    </property>
+    <property name="scaledContents">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="POWER">
+    <property name="geometry">
+     <rect>
+      <x>1028</x>
+      <y>197</y>
+      <width>21</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="pixmap">
+     <pixmap>../ICON/led-off.png</pixmap>
+    </property>
+    <property name="scaledContents">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="DIRECTION_A">
+    <property name="geometry">
+     <rect>
+      <x>196</x>
+      <y>456</y>
+      <width>63</width>
+      <height>73</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="pixmap">
+     <pixmap>../ICON/direction-a-off.png</pixmap>
+    </property>
+    <property name="scaledContents">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="DIRECTION_B">
+    <property name="geometry">
+     <rect>
+      <x>1090</x>
+      <y>456</y>
+      <width>64</width>
+      <height>73</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="pixmap">
+     <pixmap>../ICON/direction-b-off.png</pixmap>
+    </property>
+    <property name="scaledContents">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="BUZZER_STOP">
+    <property name="geometry">
+     <rect>
+      <x>420</x>
+      <y>690</y>
+      <width>51</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="flat">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="ALARM">
+    <property name="geometry">
+     <rect>
+      <x>496</x>
+      <y>212</y>
+      <width>75</width>
+      <height>71</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="icon">
+     <iconset>
+      <normaloff>../ICON/toogle-on.png</normaloff>../ICON/toogle-on.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>70</width>
+      <height>70</height>
+     </size>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="AUTOMATIC">
+    <property name="geometry">
+     <rect>
+      <x>82</x>
+      <y>621</y>
+      <width>101</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="flat">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="SEMI_AUTOMATIC">
+    <property name="geometry">
+     <rect>
+      <x>192</x>
+      <y>683</y>
+      <width>101</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="flat">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="MANUAL">
+    <property name="geometry">
+     <rect>
+      <x>82</x>
+      <y>742</y>
+      <width>101</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="flat">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="SELECTOR_SWITCH">
+    <property name="geometry">
+     <rect>
+      <x>92</x>
+      <y>655</y>
+      <width>85</width>
+      <height>85</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="pixmap">
+     <pixmap>../ICON/selector-switch-AUTOMATIC.png</pixmap>
+    </property>
+    <property name="scaledContents">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="ZP1">
+    <property name="geometry">
+     <rect>
+      <x>290</x>
+      <y>430</y>
+      <width>93</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>ZP1</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="ZP2">
+    <property name="geometry">
+     <rect>
+      <x>520</x>
+      <y>430</y>
+      <width>93</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>ZP2</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="ZP3">
+    <property name="geometry">
+     <rect>
+      <x>940</x>
+      <y>430</y>
+      <width>93</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>ZP3</string>
+    </property>
+   </widget>
+   <widget class="QFrame" name="frame">
+    <property name="geometry">
+     <rect>
+      <x>50</x>
+      <y>41</y>
+      <width>131</width>
+      <height>131</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(233, 239, 255);
+border-color: rgb(197, 197, 197);</string>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::StyledPanel</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Raised</enum>
+    </property>
+    <widget class="QPushButton" name="ACK_REQUEST">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>35</y>
+       <width>93</width>
+       <height>28</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background-color: rgb(204, 204, 204);</string>
+     </property>
+     <property name="text">
+      <string>ACK REQUEST</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="ABCD_HDL">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>70</y>
+       <width>93</width>
+       <height>28</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background-color: rgb(204, 204, 204);</string>
+     </property>
+     <property name="text">
+      <string>A/B/C/D-HDL-DI</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="ACK_DI">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>104</y>
+       <width>21</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="pixmap">
+      <pixmap>../ICON/led-off.png</pixmap>
+     </property>
+     <property name="scaledContents">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label">
+     <property name="geometry">
+      <rect>
+       <x>50</x>
+       <y>107</y>
+       <width>47</width>
+       <height>13</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>ACK DI</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_2">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>12</y>
+       <width>61</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>PANEL TBI</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QLabel" name="JPL_KIRI">
+    <property name="geometry">
+     <rect>
+      <x>630</x>
+      <y>319</y>
+      <width>181</width>
+      <height>161</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="pixmap">
+     <pixmap>../ICON/LEFT-JPL-0.png</pixmap>
+    </property>
+    <property name="scaledContents">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="JPL_KANAN">
+    <property name="geometry">
+     <rect>
+      <x>540</x>
+      <y>494</y>
+      <width>181</width>
+      <height>161</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="pixmap">
+     <pixmap>../ICON/RIGHT-JPL-0.png</pixmap>
+    </property>
+    <property name="scaledContents">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="LEFT_JPL_R">
+    <property name="geometry">
+     <rect>
+      <x>762</x>
+      <y>405</y>
+      <width>10</width>
+      <height>10</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="pixmap">
+     <pixmap>../ICON/led-off.png</pixmap>
+    </property>
+    <property name="scaledContents">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="LEFT_JPL_L">
+    <property name="geometry">
+     <rect>
+      <x>741</x>
+      <y>405</y>
+      <width>10</width>
+      <height>10</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="pixmap">
+     <pixmap>../ICON/led-off.png</pixmap>
+    </property>
+    <property name="scaledContents">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="RIGHT_JPL_L">
+    <property name="geometry">
+     <rect>
+      <x>579</x>
+      <y>580</y>
+      <width>10</width>
+      <height>10</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="pixmap">
+     <pixmap>../ICON/led-off.png</pixmap>
+    </property>
+    <property name="scaledContents">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="RIGHT_JPL_R">
+    <property name="geometry">
+     <rect>
+      <x>601</x>
+      <y>580</y>
+      <width>10</width>
+      <height>10</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="pixmap">
+     <pixmap>../ICON/led-off.png</pixmap>
+    </property>
+    <property name="scaledContents">
+     <bool>true</bool>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1351</width>
+     <height>26</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
