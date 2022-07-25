@@ -326,8 +326,20 @@ class Ui_MainWindow(object):
         self.OPEN_BARIER.clicked.connect(self.openBRClicked)
 
         # 7. simulasi ACK dari TBI
+        self.ACK_REQUEST.pressed.connect(self.ackTBIPressed)
+        self.ACK_REQUEST.released.connect(self.ackTBIReleased)
+
         # 8. 9. 10. simulasi Kontak Rel
+        self.ZP1.pressed.connect(self.ZP1Pressed)
+        self.ZP1.released.connect(self.ZP1Released)
+        self.ZP2.pressed.connect(self.ZP2Pressed)
+        self.ZP2.released.connect(self.ZP2Released)
+        self.ZP3.pressed.connect(self.ZP3Pressed)
+        self.ZP3.released.connect(self.ZP3Released)
+
         # 11. HDL DI
+        self.ABCD_HDL.pressed.connect(self.HDLPressed)
+        self.ABCD_HDL.released.connect(self.HDLReleased)
 
         #timer update indikasi console
         self.timerINDConsole = QtCore.QTimer()
@@ -522,9 +534,9 @@ class Ui_MainWindow(object):
         self.ZP1DI = 0
 
     # 10. triger ZP2
-    def ZP1Pressed(self):
+    def ZP2Pressed(self):
         self.ZP2DI = 1
-    def ZP1Released(self):
+    def ZP2Released(self):
         self.ZP2DI = 0
 
     # 11. triger ZP3
