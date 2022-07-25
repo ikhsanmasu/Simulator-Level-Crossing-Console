@@ -17,20 +17,22 @@ from PyQt5.QtCore import QObject, QThread, pyqtSignal, QTimer
 dir = os.getcwd()
 
 #multi threading untuk nyalakan alarm
-class alarmsound(QObject):
+class alarmSoundEfect(QObject):
     mixer.init()
     tengSound = mixer.Sound(dir + '/ICON/teng.mp3')
     nongSound = mixer.Sound(dir + '/ICON/nong.mp3')
+    tengSound.set_volume(2)
+    nongSound.set_volume(2)
     teng = pyqtSignal() #kirim signal untuk ganti warna lampu jpl
     nong = pyqtSignal()
 
     def __init__(self):
-        super(alarmsound, self).__init__()
-        self._start = 0
+        super(alarmSoundEfect, self).__init__()
+        self._alarmBunyi = 0
     #nyalakan alarm ketika dapat perintah start dari tombol alarm dan manual
     def run(self):
         while True:
-            while self._start:
+            if self._alarmBunyi:
                 self.teng.emit()
                 self.tengSound.play()
                 time.sleep(self.tengSound.get_length())
@@ -39,11 +41,34 @@ class alarmsound(QObject):
                 self.nongSound.play()
                 time.sleep(self.nongSound.get_length())
 
-    def stop(self):
-        self._start = 0
+    def bunyiAlarmStop(self):
+        self._alarmBunyi = 0
 
-    def start(self):
-        self._start = 1
+    def bunyiAlarmStart(self):
+        self._alarmBunyi = 1
+#multi threading untuk nyalakan buzzer
+class buzzerSoundEfect(QObject):
+    mixer.init()
+    buzzerSound = mixer.Sound(dir + '/ICON/BUZZER.mp3')
+    buzzerSound.set_volume(0.05)
+
+    def __init__(self):
+        super(buzzerSoundEfect, self).__init__()
+        self._buzzerBunyi = 0
+
+    def run(self):
+        while True:
+            if self._buzzerBunyi:
+                self.buzzerSound.play()
+                time.sleep(self.buzzerSound.get_length())
+
+    def bunyiBuzzerStop(self):
+        self._buzzerBunyi = 0
+
+    def bunyiBuzzerStart(self):
+        self._buzzerBunyi = 1
+
+
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -200,65 +225,116 @@ class Ui_MainWindow(object):
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
 
-        self.JPL_KIRI = QtWidgets.QLabel(self.centralwidget)
-        self.JPL_KIRI.setGeometry(QtCore.QRect(630, 319, 181, 161))
-        self.JPL_KIRI.setText("")
-        self.JPL_KIRI.setPixmap(QtGui.QPixmap(dir + "/ICON/LEFT-JPL-0.png"))
-        self.JPL_KIRI.setScaledContents(True)
-        self.JPL_KIRI.setObjectName("JPL_KIRI")
-        self.JPL_KANAN = QtWidgets.QLabel(self.centralwidget)
-        self.JPL_KANAN.setGeometry(QtCore.QRect(540, 494, 181, 161))
-        self.JPL_KANAN.setText("")
-        self.JPL_KANAN.setPixmap(QtGui.QPixmap(dir + "/ICON/RIGHT-JPL-0.png"))
-        self.JPL_KANAN.setScaledContents(True)
-        self.JPL_KANAN.setObjectName("JPL_KANAN")
-        self.LEFT_JPL_R = QtWidgets.QLabel(self.centralwidget)
-        self.LEFT_JPL_R.setGeometry(QtCore.QRect(762, 405, 10, 10))
-        self.LEFT_JPL_R.setText("")
-        self.LEFT_JPL_R.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
-        self.LEFT_JPL_R.setScaledContents(True)
-        self.LEFT_JPL_R.setObjectName("LEFT_JPL_R")
-        self.LEFT_JPL_L = QtWidgets.QLabel(self.centralwidget)
-        self.LEFT_JPL_L.setGeometry(QtCore.QRect(741, 405, 10, 10))
-        self.LEFT_JPL_L.setText("")
-        self.LEFT_JPL_L.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
-        self.LEFT_JPL_L.setScaledContents(True)
-        self.LEFT_JPL_L.setObjectName("LEFT_JPL_L")
-        self.RIGHT_JPL_L = QtWidgets.QLabel(self.centralwidget)
-        self.RIGHT_JPL_L.setGeometry(QtCore.QRect(579, 580, 10, 10))
-        self.RIGHT_JPL_L.setText("")
-        self.RIGHT_JPL_L.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
-        self.RIGHT_JPL_L.setScaledContents(True)
-        self.RIGHT_JPL_L.setObjectName("RIGHT_JPL_L")
-        self.RIGHT_JPL_R = QtWidgets.QLabel(self.centralwidget)
-        self.RIGHT_JPL_R.setGeometry(QtCore.QRect(601, 580, 10, 10))
-        self.RIGHT_JPL_R.setText("")
-        self.RIGHT_JPL_R.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
-        self.RIGHT_JPL_R.setScaledContents(True)
-        self.RIGHT_JPL_R.setObjectName("RIGHT_JPL_R")
-        #tambahan selain dari qt
-        self.alarmState = 0
-        self.automaticState = 1
-        self.semiautomaticState = 0
-        self.manualState = 0
-        self.buzzerState = 0
-        self.ackState = 0
-        self.jplUPposisition = 1
-        self.jplDNposisition = 0
+        self.JPL_ATAS = QtWidgets.QLabel(self.centralwidget)
+        self.JPL_ATAS.setGeometry(QtCore.QRect(630, 319, 181, 161))
+        self.JPL_ATAS.setText("")
+        self.JPL_ATAS.setPixmap(QtGui.QPixmap(dir + "/ICON/LEFT-JPL-0.png"))
+        self.JPL_ATAS.setScaledContents(True)
+        self.JPL_ATAS.setObjectName("JPL_KIRI")
+        self.JPL_BAWAH = QtWidgets.QLabel(self.centralwidget)
+        self.JPL_BAWAH.setGeometry(QtCore.QRect(540, 494, 181, 161))
+        self.JPL_BAWAH.setText("")
+        self.JPL_BAWAH.setPixmap(QtGui.QPixmap(dir + "/ICON/RIGHT-JPL-0.png"))
+        self.JPL_BAWAH.setScaledContents(True)
+        self.JPL_BAWAH.setObjectName("JPL_KANAN")
+        self.Lampu_JPLAtas_R = QtWidgets.QLabel(self.centralwidget)
+        self.Lampu_JPLAtas_R.setGeometry(QtCore.QRect(762, 405, 10, 10))
+        self.Lampu_JPLAtas_R.setText("")
+        self.Lampu_JPLAtas_R.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
+        self.Lampu_JPLAtas_R.setScaledContents(True)
+        self.Lampu_JPLAtas_R.setObjectName("LEFT_JPL_R")
+        self.Lampu_JPLAtas_L = QtWidgets.QLabel(self.centralwidget)
+        self.Lampu_JPLAtas_L.setGeometry(QtCore.QRect(741, 405, 10, 10))
+        self.Lampu_JPLAtas_L.setText("")
+        self.Lampu_JPLAtas_L.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
+        self.Lampu_JPLAtas_L.setScaledContents(True)
+        self.Lampu_JPLAtas_L.setObjectName("LEFT_JPL_L")
+        self.Lampu_JPLBawah_L = QtWidgets.QLabel(self.centralwidget)
+        self.Lampu_JPLBawah_L.setGeometry(QtCore.QRect(579, 580, 10, 10))
+        self.Lampu_JPLBawah_L.setText("")
+        self.Lampu_JPLBawah_L.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
+        self.Lampu_JPLBawah_L.setScaledContents(True)
+        self.Lampu_JPLBawah_L.setObjectName("RIGHT_JPL_L")
+        self.Lampu_JPLBawah_R = QtWidgets.QLabel(self.centralwidget)
+        self.Lampu_JPLBawah_R.setGeometry(QtCore.QRect(601, 580, 10, 10))
+        self.Lampu_JPLBawah_R.setText("")
+        self.Lampu_JPLBawah_R.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
+        self.Lampu_JPLBawah_R.setScaledContents(True)
+        self.Lampu_JPLBawah_R.setObjectName("RIGHT_JPL_R")
 
+        # tambahan selain dari QT
+
+        # variable indikasi F30
+        self.buzzerDO = 0
+        self.alarmDO = 0
+        self.dirWarDO = 0
+        self.dirEarDO = 0
+        self.BRUPDO = 0
+        self.BRDNDO = 0
+        self.COMMDO = 0
+        self.ackDO = 0
+
+        # variable perintah ke F30
+        self.ackConsoleDI = 0
+        self.buzzerStopDI = 0
+        self.brAutoDI = 0
+        self.brSemiAutoDI = 0
+        self.brManualDI = 0
+        self.brPosUPDI = 0
+        self.brPosDNDI = 0
+        self.ackTBIDI = 0
+        self.ZP1DI = 0
+        self.ZP2DI = 0
+        self.ZP3DI = 0
+        self.ABCDHDLDI = 0
+
+        # variable indikasi console
+        self.ackConsole = 0
+        self.buzzerStop = 0
+        self.directionAState = 0
+        self.directionBState = 0
+        self.brAuto = 1
+        self.brSemiAuto = 0
+        self.brManual = 0
+        self.brPosUP = 1
+        self.brPosDN = 0
+        self.ackTBI = 0
+
+        # variable Push Button Console
+        self.ZP1PB = 0
+        self.ZP2PB = 0
+        self.ZP3PB = 0
+        self.ABCDHDLPB = 0
+
+        #variable internal
+        self.powerState = 1 # keadaan power
+        self.alarmState = 0 # posisi toogle alarm, 1 ketika ON 0 ketika OFF
+        self.bukaPerintang = 0 # perintah buka perintang atau relay BR UP
+        self.tutupPerintang = 0 # perintah tutup perintang atau relay BR DN
+        self.rem = 0 # perintah rem perintang
+        self.derajatJPL = 0 # posisi JPL diwakilkan angka 0-9 mengartikan posisi per 10 derajat
+
+        # miltithreading untuk bunyi alarm, threading selalu aktif hanya perintah bunyinya yang di kendalikan
         self.threadAlarm = QThread()
-        self.bunyiAlarm = alarmsound()
+        self.bunyiAlarm = alarmSoundEfect()
         self.bunyiAlarm.moveToThread(self.threadAlarm)
         self.threadAlarm.started.connect(self.bunyiAlarm.run)
-        self.bunyiAlarm.teng.connect(self.flip)
-        self.bunyiAlarm.nong.connect(self.flop)
+        self.bunyiAlarm.teng.connect(self.flipLampuJPL)
+        self.bunyiAlarm.nong.connect(self.flopLampuJPL)
         self.threadAlarm.start()
 
-        self.iconalarmon = QtGui.QIcon()
-        self.iconalarmon.addPixmap(QtGui.QPixmap(dir + "/ICON/toogle-on.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.iconalarmoff = QtGui.QIcon()
-        self.iconalarmoff.addPixmap(QtGui.QPixmap(dir + "/ICON/toogle-off.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.ALARM.setIcon(self.iconalarmoff)
+        # miltithreading untuk bunyi buzzer, threading selalu aktif hanya perintah bunyinya yang di kendalikan
+        self.threadBuzzer = QThread()
+        self.bunyiBuzzer= buzzerSoundEfect()
+        self.bunyiBuzzer.moveToThread(self.threadBuzzer)
+        self.threadBuzzer.started.connect(self.bunyiBuzzer.run)
+        self.threadBuzzer.start()
+
+        self.iconalarmOn = QtGui.QIcon()
+        self.iconalarmOn.addPixmap(QtGui.QPixmap(dir + "/ICON/toogle-on.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.iconalarmOff = QtGui.QIcon()
+        self.iconalarmOff.addPixmap(QtGui.QPixmap(dir + "/ICON/toogle-off.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.ALARM.setIcon(self.iconalarmOff)
         self.ALARM.clicked.connect(self.ALARMclicked)
 
         self.AUTOMATIC.clicked.connect(self.switchAUTO)
@@ -274,15 +350,12 @@ class Ui_MainWindow(object):
         self.BRAKE.pressed.connect(self.brakePressed)
         self.BRAKE.released.connect(self.brakeReleased)
 
-        # self.checkThreadTimer = QtCore.QTimer()
-        # self.checkThreadTimer.setInterval(500)
-        # self.checkThreadTimer.timeout.connect(self.tes)
-        # self.checkThreadTimer.start()
-
-        self.bukaPerintang = 0
-        self.tutupPerintang = 0
-        self.rem = 0
-        self.posisiJPL = 0
+        #timer update indikasi console
+        self.timerINDConsole = QtCore.QTimer()
+        self.timerINDConsole.setInterval(100)
+        self.timerINDConsole.timeout.connect(self.updateINDConsole)
+        self.timerINDConsole.start()
+        #timer update animasi JPL
         self.timerJpl = QtCore.QTimer()
         self.timerJpl.setInterval(1000)
         self.timerJpl.timeout.connect(self.updateJPL)
@@ -306,15 +379,108 @@ class Ui_MainWindow(object):
         self.label.setText(_translate("MainWindow", "ACK DO"))
         self.label_2.setText(_translate("MainWindow", "PANEL TBI"))
 
+    # list indikasi di JPL
+    # 1. ACK-DO = indikasi output dari F30 ke Backoff TBI
+    # 2. DIRECTION A = indikasi kedatangan kereta ke arah timur
+    # 3. DIRECTION B = indikasi kedatangan kereta ke arah barat
+    # 4. JPL Atas dan Bawah =  animasi buka tutup JPL
+    # 5. Lampu JPL = atas kiri kanan dan bawah kiri kanan
+    # 6. Barier UP = JPL terdeteksi posisi atas
+    # 7. Barier DN = JPL terdeteksi posisi bawah
+    # 8. Communication = komunikasi?
+    # 9. Power = ?
+    # 10. Buzzer
+    def updateINDConsole(self):
+        # 1. ACK-DO
+        if self.ackDO:
+            self.ACK_REQUEST_DO.setPixmap(QtGui.QPixmap(dir + "/ICON/led-yellow-on.png"))
+        else:
+            self.ACK_REQUEST_DO.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
+        # 2. DIRECTION A
+        if self.dirEarDO:
+            self.DIRECTION_A.setPixmap(QtGui.QPixmap(dir + "/ICON/direction-a-on.png"))
+        else:
+            self.DIRECTION_A.setPixmap(QtGui.QPixmap(dir + "/ICON/direction-a-off"))
+        # 3. DIRECTION B
+        if self.dirWarDO:
+            self.DIRECTION_B.setPixmap(QtGui.QPixmap(dir + "/ICON/direction-b-on.png"))
+        else:
+            self.DIRECTION_B.setPixmap(QtGui.QPixmap(dir + "/ICON/direction-b-off"))
+        #5
+        if not self.alarmState or self.brSemiAuto or self.brAuto:
+            self.matikanLampuJPL()
+        # 6. Barier UP
+        if self.brPosUP:
+            self.BARIER_UP.setPixmap(QtGui.QPixmap(dir + "/ICON/led-yellow-on.png"))
+        else:
+            self.BARIER_UP.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
+        # 7. Barier DOWN
+        if self.brPosDN:
+            self.BARIER_DOWN.setPixmap(QtGui.QPixmap(dir + "/ICON/led-yellow-on.png"))
+        else:
+            self.BARIER_DOWN.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
+        # 8. Communication
+        if self.COMMDO:
+            self.COMMUNICATION.setPixmap(QtGui.QPixmap(dir + "/ICON/led-yellow-on.png"))
+        else:
+            self.COMMUNICATION.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
+        # 9. Power
+        if self.powerState:
+            self.POWER.setPixmap(QtGui.QPixmap(dir + "/ICON/led-green-on.png"))
+        # 10. Buzzer
+        if self.buzzerDO:
+            self.bunyiBuzzer.bunyiBuzzerStart()
+        else:
+            self.bunyiBuzzer.bunyiBuzzerStop()
+
+    # 4. JPL Atas dan Bawah
+    def updateJPL(self):
+        # update animasi posisi dejarat JPL
+        self.JPL_ATAS.setPixmap(QtGui.QPixmap(dir + "/ICON/LEFT-JPL-" + str(self.derajatJPL) + ".png"))
+        self.JPL_BAWAH.setPixmap(QtGui.QPixmap(dir + "/ICON/RIGHT-JPL-" + str(self.derajatJPL) + ".png"))
+
+        # posisi JPL diwakilkan angka 0-9 mengartikan posisi per 10 derajat
+        if self.derajatJPL >= 0 and self.derajatJPL < 9 and self.tutupPerintang and not self.rem:
+            self.derajatJPL += 1
+        elif self.derajatJPL > 0 and self.derajatJPL <= 9 and self.bukaPerintang and not self.rem:
+            self.derajatJPL -= 1
+
+        # logika posisi JPL UP atau DN
+        if self.derajatJPL == 0:
+            self.brPosUP = 1
+            self.bukaPerintang = 0
+        if self.derajatJPL == 9:
+            self.brPosDN = 1
+            self.tutupPerintang = 0
+        if self.derajatJPL > 0 and self.derajatJPL < 9 :
+            self.brPosUP = 0
+            self.brPosDN = 0
+    # 5. Lampu JPL
+    def flipLampuJPL(self):
+        self.Lampu_JPLAtas_L.setPixmap(QtGui.QPixmap(dir + "/ICON/led-red-on.png"))
+        self.Lampu_JPLAtas_R.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
+        self.Lampu_JPLBawah_L.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
+        self.Lampu_JPLBawah_R.setPixmap(QtGui.QPixmap(dir + "/ICON/led-red-on.png"))
+    def flopLampuJPL(self):
+        self.Lampu_JPLAtas_L.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
+        self.Lampu_JPLAtas_R.setPixmap(QtGui.QPixmap(dir + "/ICON/led-red-on.png"))
+        self.Lampu_JPLBawah_L.setPixmap(QtGui.QPixmap(dir + "/ICON/led-red-on.png"))
+        self.Lampu_JPLBawah_R.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
+    def matikanLampuJPL(self):
+        self.Lampu_JPLAtas_L.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
+        self.Lampu_JPLAtas_R.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
+        self.Lampu_JPLBawah_L.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
+        self.Lampu_JPLBawah_R.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
+
     def tes(self):
         print("tes")
 
     def closeBRClicked(self):
-        if not self.automaticState:
+        if not self.brAuto:
             self.tutupPerintang= 1
 
     def openBRClicked(self):
-        if not self.automaticState:
+        if not self.brAuto:
             self.bukaPerintang = 1
 
     def brakePressed(self):
@@ -322,96 +488,60 @@ class Ui_MainWindow(object):
     def brakeReleased(self):
         self.rem = 0
 
-    def updateJPL(self):
-        self.JPL_KIRI.setPixmap(QtGui.QPixmap(dir + "/ICON/LEFT-JPL-" + str(self.posisiJPL) + ".png"))
-        self.JPL_KANAN.setPixmap(QtGui.QPixmap(dir + "/ICON/RIGHT-JPL-" + str(self.posisiJPL) + ".png"))
-
-        if self.posisiJPL >= 0 and self.posisiJPL < 9 and self.tutupPerintang and not self.rem:
-            self.posisiJPL += 1
-        elif self.posisiJPL > 0 and self.posisiJPL <= 9 and self.bukaPerintang and not self.rem:
-            self.posisiJPL -= 1
-
-        if self.posisiJPL == 0:
-            self.jplUPposisition = 1
-            self.bukaPerintang = 0
-        if self.posisiJPL == 9:
-            self.jplDNposisition = 1
-            self.tutupPerintang = 0
-        if self.posisiJPL > 0 and self.posisiJPL < 9 :
-            self.jplUPposisition = 0
-            self.jplDNposisition = 0
-
-    def flip(self):
-        self.LEFT_JPL_L.setPixmap(QtGui.QPixmap(dir + "/ICON/led-red-on.png"))
-        self.LEFT_JPL_R.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
-        self.RIGHT_JPL_L.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
-        self.RIGHT_JPL_R.setPixmap(QtGui.QPixmap(dir + "/ICON/led-red-on.png"))
-    def flop(self):
-        self.LEFT_JPL_L.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
-        self.LEFT_JPL_R.setPixmap(QtGui.QPixmap(dir + "/ICON/led-red-on.png"))
-        self.RIGHT_JPL_L.setPixmap(QtGui.QPixmap(dir + "/ICON/led-red-on.png"))
-        self.RIGHT_JPL_R.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
-
-
-    def matikanLampuJPL(self):
-        self.LEFT_JPL_L.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
-        self.LEFT_JPL_R.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
-        self.RIGHT_JPL_L.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
-        self.RIGHT_JPL_R.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
-
     def switchAUTO(self):
         self.matikanLampuJPL()
-        if self.semiautomaticState == 1:
+        self.tutupPerintang = 0
+        self.bukaPerintang = 0
+        if self.brSemiAuto == 1:
             self.SELECTOR_SWITCH.setPixmap(QtGui.QPixmap(dir + "/ICON/selector-switch-AUTOMATIC.png"))
-            self.automaticState = 1
-            self.semiautomaticState = 0
-            self.manualState = 0
+            self.brAuto = 1
+            self.brSemiAuto = 0
+            self.brManual = 0
             self.writeModbus()
 
     def switchSEMI(self):
-        self.SELECTOR_SWITCH.setPixmap(QtGui.QPixmap(dir + "/ICON/selector-switch-SEMI AUTOMATIC.png"))
-        self.automaticState = 0
-        self.semiautomaticState = 1
-        self.manualState = 0
-        self.writeModbus()
         self.matikanLampuJPL()
+        self.SELECTOR_SWITCH.setPixmap(QtGui.QPixmap(dir + "/ICON/selector-switch-SEMI AUTOMATIC.png"))
+        self.brAuto = 0
+        self.brSemiAuto = 1
+        self.brManual = 0
+        self.writeModbus()
         if self.alarmState:
-            self.bunyiAlarm.stop()
+            self.bunyiAlarm.bunyiAlarmStop()
 
 
     def switchMANUAL(self):
-        if self.semiautomaticState == 1:
+        if self.brSemiAuto == 1:
             self.SELECTOR_SWITCH.setPixmap(QtGui.QPixmap(dir + "/ICON/selector-switch-MANUAL.png"))
-            self.automaticState = 0
-            self.semiautomaticState = 0
-            self.manualState = 1
+            self.brAuto = 0
+            self.brSemiAuto = 0
+            self.brManual = 1
             self.writeModbus()
-            if self.alarmState and self.manualState:
-                self.bunyiAlarm.start()
+            if self.alarmState and self.brManual:
+                self.bunyiAlarm.bunyiAlarmStart()
 
     def ALARMclicked(self):
         #toogle alarm on atau off
         if self.alarmState == 1:
-            self.ALARM.setIcon(self.iconalarmoff)
-            self.matikanLampuJPL()
+            self.ALARM.setIcon(self.iconalarmOff)
             self.alarmState = 0
         else:
-            self.ALARM.setIcon(self.iconalarmon)
+            self.ALARM.setIcon(self.iconalarmOn)
             self.alarmState = 1
 
         #alarm hanya bisa dinyalakan lewat toogle switch saat operasi manual
-        if self.alarmState and self.manualState:
-            self.bunyiAlarm.start()
+        if self.alarmState and self.brManual:
+            self.bunyiAlarm.bunyiAlarmStart()
         else:
-            self.bunyiAlarm.stop()
+            self.bunyiAlarm.bunyiAlarmStop()
         self.writeModbus()
 
     def buzzerPressed(self):
-        self.buzzerState = 1
+        self.buzzerStop = 1
         self.writeModbus()
 
     def buzzerReleased(self):
-        self.buzzerState = 0
+        self.buzzerStop = 0
         self.writeModbus()
 
     def ackPressed(self):
@@ -419,7 +549,7 @@ class Ui_MainWindow(object):
         self.writeModbus()
 
     def ackReleased(self):
-        self.ackState = 0
+        self.ackConsole = 0
         self.writeModbus()
 
     def writeModbus(self):
