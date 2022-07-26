@@ -108,6 +108,7 @@ class Ui_MainWindow(object):
         self.tutupPerintang = 0 # perintah tutup perintang atau relay BR DN
         self.rem = 0 # perintah rem perintang
         self.derajatJPL = 0 # posisi JPL diwakilkan angka 0-9 mengartikan posisi per 10 derajat
+        self.bunyikanAlarm = 0
 
     def setupUi(self, MainWindow):
 
@@ -349,7 +350,7 @@ class Ui_MainWindow(object):
 
         # timer baca modbus dan update indikasi console
         self.timerINDConsole = QtCore.QTimer()
-        self.timerINDConsole.setInterval(1000)
+        self.timerINDConsole.setInterval(800)
         self.timerINDConsole.timeout.connect(self.readModbus)
         self.timerINDConsole.start()
 
@@ -397,6 +398,8 @@ class Ui_MainWindow(object):
     # 8. Communication = komunikasi?
     # 9. Power = ?
     # 10. Buzzer = bunyi buzzer dari perintah F30
+    # 11. Alarm
+    # 12. output ACK DO to TBI
     def updateINDConsole(self):
         # 1. ACK-DO
         if self.ackDO:
@@ -413,7 +416,7 @@ class Ui_MainWindow(object):
             self.DIRECTION_B.setPixmap(QtGui.QPixmap(dir + "/ICON/direction-b-on.png"))
         else:
             self.DIRECTION_B.setPixmap(QtGui.QPixmap(dir + "/ICON/direction-b-off"))
-        #5
+        # 5. Lampu JPL = atas kiri kanan dan bawah kiri kanan
         if not self.alarmState or self.brSemiAutoDI or self.brAutoDI:
             self.matikanLampuJPL()
         # 6. Barier UP
@@ -439,17 +442,30 @@ class Ui_MainWindow(object):
             self.bunyiBuzzer.bunyiBuzzerStart()
         else:
             self.bunyiBuzzer.bunyiBuzzerStop()
+        # 11. Alarm
+        # alarm hanya bisa dinyalakan lewat toogle switch saat operasi manual
+        if self.brManualDI:
+            if self.alarmState:
+                self.bunyiAlarm.bunyiAlarmStart()
+            else:
+                self.bunyiAlarm.bunyiAlarmStop()
+        else:
+            if self.alarmDO:
+                self.bunyiAlarm.bunyiAlarmStart()
+            else:
+                self.bunyiAlarm.bunyiAlarmStop()
+        # 12. output ACK DO to TBI
+        if self.ackDO:
+            self.ACK_REQUEST_DO.setPixmap(QtGui.QPixmap(dir + "/ICON/led-yellow-on.png"))
+        else:
+            self.ACK_REQUEST_DO.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
 
     # 4. JPL Atas dan Bawah
     def updateJPL(self):
-        # update animasi posisi dejarat JPL
-        self.JPL_ATAS.setPixmap(QtGui.QPixmap(dir + "/ICON/LEFT-JPL-" + str(self.derajatJPL) + ".png"))
-        self.JPL_BAWAH.setPixmap(QtGui.QPixmap(dir + "/ICON/RIGHT-JPL-" + str(self.derajatJPL) + ".png"))
-
         # posisi JPL diwakilkan angka 0-9 mengartikan posisi per 10 derajat
-        if self.derajatJPL >= 0 and self.derajatJPL < 9 and self.tutupPerintang and not self.rem:
+        if self.derajatJPL >= 0 and self.derajatJPL < 9 and (self.tutupPerintang or self.BRDNDO)  and not self.rem:
             self.derajatJPL += 1
-        elif self.derajatJPL > 0 and self.derajatJPL <= 9 and self.bukaPerintang and not self.rem:
+        elif self.derajatJPL > 0 and self.derajatJPL <= 9 and (self.bukaPerintang or self.BRUPDO) and not self.rem:
             self.derajatJPL -= 1
 
         # logika posisi JPL UP atau DN
@@ -462,6 +478,11 @@ class Ui_MainWindow(object):
         if self.derajatJPL > 0 and self.derajatJPL < 9 :
             self.brPosUPDI = 0
             self.brPosDNDI = 0
+
+        # update animasi posisi dejarat JPL
+        self.JPL_ATAS.setPixmap(QtGui.QPixmap(dir + "/ICON/LEFT-JPL-" + str(self.derajatJPL) + ".png"))
+        self.JPL_BAWAH.setPixmap(QtGui.QPixmap(dir + "/ICON/RIGHT-JPL-" + str(self.derajatJPL) + ".png"))
+
     # 5. Lampu JPL
     def flipLampuJPL(self):
         self.Lampu_JPLAtas_L.setPixmap(QtGui.QPixmap(dir + "/ICON/led-red-on.png"))
@@ -587,12 +608,6 @@ class Ui_MainWindow(object):
         else:
             self.ALARM.setIcon(self.iconalarmOn)
             self.alarmState = 1
-
-        #alarm hanya bisa dinyalakan lewat toogle switch saat operasi manual
-        if self.alarmState and self.brManualDI:
-            self.bunyiAlarm.bunyiAlarmStart()
-        else:
-            self.bunyiAlarm.bunyiAlarmStop()
         self.writeModbus()
 
     #mapping tutup buka rem perintang
@@ -633,7 +648,7 @@ class Ui_MainWindow(object):
         register0[15] = self.ackTBIDI
 
         bin2dec = 0
-        for i,x in enumerate(register0):
+        for i, x in enumerate(register0):
             bin2dec += register0[i] * 2**i
         is_ok = c.write_multiple_registers(0, [bin2dec])
         if is_ok:
@@ -645,7 +660,7 @@ class Ui_MainWindow(object):
         data = c.read_holding_registers(0, 1)
         register0 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         data = data[0]
-        for i in range(15):
+        for i in range(16):
             register0[i] = data % 2
             data = data // 2
 
