@@ -73,8 +73,6 @@ class buzzerSoundEfect(QObject):
     def bunyiBuzzerStart(self):
         self._buzzerBunyi = 1
 
-
-
 class Ui_MainWindow(object):
     def __init__(self):
         # variable indikasi F30
@@ -111,7 +109,6 @@ class Ui_MainWindow(object):
         self.bunyikanAlarm = 0
 
     def setupUi(self, MainWindow):
-
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1351, 871)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -384,7 +381,7 @@ class Ui_MainWindow(object):
         self.ZP3.setText(_translate("MainWindow", "ZP3"))
         self.ACK_REQUEST.setText(_translate("MainWindow", "ACK REQUEST"))
         self.ABCD_HDL.setText(_translate("MainWindow", "A/B/C/D-HDL-DI"))
-        self.label.setText(_translate("MainWindow", "ACK DO"))
+        self.label.setText(_translate("MainWindow", "ACK-IND"))
         self.label_2.setText(_translate("MainWindow", "PANEL TBI"))
 
     # list indikasi di JPL
@@ -454,8 +451,11 @@ class Ui_MainWindow(object):
                 self.bunyiAlarm.bunyiAlarmStart()
             else:
                 self.bunyiAlarm.bunyiAlarmStop()
-        # 12. output ACK DO to TBI
-        if self.ackDO:
+        # 12. Indikasi ACK-IND di pale TBI, nyala saat request ack ditekan, padam saat console ack
+        if self.ackDO == 1:
+            self.ackTBIDI = 0
+
+        if self.ackTBIDI:
             self.ACK_REQUEST_DO.setPixmap(QtGui.QPixmap(dir + "/ICON/led-yellow-on.png"))
         else:
             self.ACK_REQUEST_DO.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
@@ -568,7 +568,8 @@ class Ui_MainWindow(object):
         self.ackTBIDI = 1
         self.writeModbus()
     def ackTBIReleased(self):
-        self.ackTBIDI = 0
+        # self.ackTBIDI = 0
+        pass
 
     # 9. triger ZP1
     def ZP1Pressed(self):
@@ -610,16 +611,16 @@ class Ui_MainWindow(object):
             self.alarmState = 1
         self.writeModbus()
 
-    #mapping tutup buka rem perintang
+    # mapping tutup buka rem perintang
     def closeBRClicked(self):
         self.klik.play()
         time.sleep(self.klik.get_length())
-        if not self.brAutoDI:
+        if not self.brAutoDI and not self.brPosDNDI:
             self.tutupPerintang= 1
     def openBRClicked(self):
         self.klik.play()
         time.sleep(self.klik.get_length())
-        if not self.brAutoDI:
+        if not self.brAutoDI and not self.brPosUPDI:
             self.bukaPerintang = 1
     def brakePressed(self):
         self.rem = 1
@@ -655,9 +656,13 @@ class Ui_MainWindow(object):
             pass
         else:
             print('gagal')
+
     def readModbus(self):
-        data = [0]
         data = c.read_holding_registers(0, 1)
+        if data == None:
+            data = [0]
+            print('bug')
+
         register0 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         data = data[0]
         for i in range(16):
