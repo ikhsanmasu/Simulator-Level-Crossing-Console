@@ -21,7 +21,7 @@ file = open(dir + "/ICON/IP HIMA.txt","r")
 IP_HIMA = str(file.read())
 c = ModbusClient(host=IP_HIMA, port=502, auto_open=True, debug=False)
 
-#multi threading untuk nyalakan alarm
+# multi threading untuk nyalakan alarm
 class alarmSoundEfect(QObject):
     mixer.init()
     tengSound = mixer.Sound(dir + '/ICON/teng.mp3')
@@ -34,7 +34,7 @@ class alarmSoundEfect(QObject):
     def __init__(self):
         super(alarmSoundEfect, self).__init__()
         self._alarmBunyi = 0
-    #nyalakan alarm ketika dapat perintah start dari tombol alarm dan manual
+    # nyalakan alarm ketika dapat perintah start dari tombol alarm dan manual
     def run(self):
         while True:
             if self._alarmBunyi:
@@ -51,7 +51,8 @@ class alarmSoundEfect(QObject):
 
     def bunyiAlarmStart(self):
         self._alarmBunyi = 1
-#multi threading untuk nyalakan buzzer
+
+# multi threading untuk nyalakan buzzer
 class buzzerSoundEfect(QObject):
     mixer.init()
     buzzerSound = mixer.Sound(dir + '/ICON/BUZZER.mp3')
@@ -655,13 +656,13 @@ class Ui_MainWindow(object):
         if is_ok:
             pass
         else:
-            print('gagal')
+            print('gagal write holding register')
 
     def readModbus(self):
         data = c.read_holding_registers(0, 1)
         if data == None:
             data = [0]
-            print('bug')
+            print('gagal read holding register')
 
         register0 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         data = data[0]
