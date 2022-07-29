@@ -148,6 +148,7 @@ class Ui_MainWindow(object):
         self.occ = 0
         self.bzStp = 1
         self.acknowledged = 0
+        self.release = 0
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -399,8 +400,11 @@ class Ui_MainWindow(object):
         self.timerJpl.start()
         self.BRAKE.pressed.connect(self.brakePressed)
         self.BRAKE.released.connect(self.brakeReleased)
-        self.CLOSE_BARRIER.clicked.connect(self.closeBRClicked)
-        self.OPEN_BARIER.clicked.connect(self.openBRClicked)
+
+        self.CLOSE_BARRIER.pressed.connect(self.closeBRpressed)
+        self.CLOSE_BARRIER.released.connect(self.closeBRreleased)
+        self.OPEN_BARIER.pressed.connect(self.openBRpressed)
+        self.OPEN_BARIER.released.connect(self.openBRreleased)
 
         # 7. simulasi ACK dari TBI
         self.ACK_REQUEST.pressed.connect(self.ackTBIPressed)
@@ -452,6 +456,9 @@ class Ui_MainWindow(object):
         self.timerFlash.timeout.connect(self.flashingApp)
         self.timerFlash.start()
 
+        # timer update modbus write
+        self.timerZP2 = QtCore.QTimer()
+        self.timerZP2.timeout.connect(self.mulaiRelease)
 
         self.UPDATEIP.clicked.connect(self.updateIPMODBUS)
 
@@ -711,22 +718,36 @@ class Ui_MainWindow(object):
         self.writeModbus()
 
     # mapping tutup buka rem perintang
-    def closeBRClicked(self):
+    def closeBRpressed(self):
         self.klik.play()
         time.sleep(self.klik.get_length())
         if not self.brAutoDI and not self.brPosDNDI:
-            self.tutupPerintang= 1
-    def openBRClicked(self):
+            self.tutupPerintang = 1
+    def closeBRreleased(self):
+        self.klik.play()
+        time.sleep(self.klik.get_length())
+        if not self.brAutoDI and not self.brPosDNDI:
+            self.tutupPerintang = 0
+    def openBRpressed(self):
         self.klik.play()
         time.sleep(self.klik.get_length())
         if not self.brAutoDI and not self.brPosUPDI:
             self.bukaPerintang = 1
+    def openBRreleased(self):
+        self.klik.play()
+        time.sleep(self.klik.get_length())
+        if not self.brAutoDI and not self.brPosUPDI:
+            self.bukaPerintang = 0
+
     def brakePressed(self):
         self.rem = 1
     def brakeReleased(self):
         self.klik.play()
         time.sleep(self.klik.get_length())
         self.rem = 0
+
+    def mulaiRelease(self):
+        self.release = 1
 
     def writeModbus(self):
         if self.PAKAIHIMA.isChecked():
@@ -754,13 +775,19 @@ class Ui_MainWindow(object):
             # occ
             if (self.ZP1DI or self.ackTBIDI or self.ABCDHDLDI) and not self.occWar:
                 self.occEar = 1
-            elif self.ZP2DI:
-                self.occEar = 0
 
             if self.ZP3DI and not self.occEar:
                 self.occWar = 1
-            elif self.ZP2DI:
+
+            if self.ZP2DI:
+                self.timerZP2.setInterval(10000)
+                self.timerZP2.start()
+
+            if self.release:
                 self.occWar = 0
+                self.occEar = 0
+                self.release = 0
+                self.timerZP2.stop()
 
             self.occ = self.occEar or self.occWar
 
@@ -797,12 +824,13 @@ class Ui_MainWindow(object):
                 self.ackDO = 1
             elif not(self.ackConsoleDI or (self.brAutoDI and self.brPosDNDI)):
                 self.ackDO = 0
-
-            if self.ackConsoleDI and self.occ:
+            #ack untuk menenangkan flashing panah kedatangan
+            if (self.ackConsoleDI or (self.brAutoDI and self.brPosDNDI)) and self.occ:
                 self.acknowledged = 1
             if not self.occ:
                 self.acknowledged = 0
 
+            # indikasi panah kedatangan
             if (self.occEar and self.flash and not self.ackConsoleDI) or (self.occEar and self.acknowledged):
                 self.dirEarDO = 1
             elif not (self.occEar and self.flash and not self.ackConsoleDI) or (self.occEar and self.acknowledged) or not self.occEar:
