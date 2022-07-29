@@ -147,6 +147,7 @@ class Ui_MainWindow(object):
         self.occWar = 0
         self.occ = 0
         self.bzStp = 1
+        self.acknowledged = 0
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -445,6 +446,12 @@ class Ui_MainWindow(object):
         self.threadMosbus.started.connect(self.updateMosbus.run)
         self.threadMosbus.start()
 
+        # timer flash
+        self.timerFlash = QtCore.QTimer()
+        self.timerFlash.setInterval(1000)
+        self.timerFlash.timeout.connect(self.flashingApp)
+        self.timerFlash.start()
+
 
         self.UPDATEIP.clicked.connect(self.updateIPMODBUS)
 
@@ -468,6 +475,12 @@ class Ui_MainWindow(object):
         self.PAKAIHIMA.setText(_translate("MainWindow", "HIMA"))
         self.IPHIMA.setText(_translate("MainWindow", "10.10.3.106"))
         self.UPDATEIP.setText(_translate("MainWindow", "UPDATE IP"))
+
+    def flashingApp(self):
+        if self.flash:
+            self.flash = 0
+        else:
+            self.flash = 1
 
     ################################ list indikasi di JPL ######################################
     def updateINDConsole(self):
@@ -785,14 +798,19 @@ class Ui_MainWindow(object):
             elif not(self.ackConsoleDI or (self.brAutoDI and self.brPosDNDI)):
                 self.ackDO = 0
 
-            if self.occEar:
+            if self.ackConsoleDI and self.occ:
+                self.acknowledged = 1
+            if not self.occ:
+                self.acknowledged = 0
+
+            if (self.occEar and self.flash and not self.ackConsoleDI) or (self.occEar and self.acknowledged):
                 self.dirEarDO = 1
-            elif not self.occEar:
+            elif not (self.occEar and self.flash and not self.ackConsoleDI) or (self.occEar and self.acknowledged) or not self.occEar:
                 self.dirEarDO = 0
 
-            if self.occWar:
+            if (self.occWar and self.flash and not self.ackConsoleDI) or (self.occWar and self.acknowledged):
                 self.dirWarDO = 1
-            elif not self.occWar:
+            elif not (self.occWar and self.flash and not self.ackConsoleDI) or (self.occWar and self.acknowledged) or not self.occWar:
                 self.dirWarDO = 0
 
     def readModbus(self):
