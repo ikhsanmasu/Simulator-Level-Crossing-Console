@@ -74,6 +74,33 @@ class buzzerSoundEfect(QObject):
     def bunyiBuzzerStart(self):
         self._buzzerBunyi = 1
 
+class modbusClass(QObject):
+    def __init__(self):
+        super(modbusClass, self).__init__()
+        self.readData = [0]
+        self.writeData = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    def run(self):
+        while True:
+            self.readData = c.read_holding_registers(0, 1)
+            if self.readData == None:
+                self.readData = [0]
+                print('gagal read holding register')
+
+            bin2dec = 0
+            for i, x in enumerate(self.writeData):
+                bin2dec += self.writeData[i] * 2 ** i
+            is_ok = c.write_multiple_registers(0, [bin2dec])
+            if is_ok:
+                pass
+            else:
+                print('gagal write holding register')
+
+    def readHolding(self):
+        return self.readData
+
+    def writeHolding(self, data):
+        self.writeData = data
+
 class Ui_MainWindow(object):
     def __init__(self):
         # variable indikasi F30
@@ -367,6 +394,12 @@ class Ui_MainWindow(object):
         self.bunyiAlarm.nong.connect(self.flopLampuJPL)
         self.threadAlarm.start()
 
+        self.threadMosbus = QThread()
+        self.updateMosbus= modbusClass()
+        self.updateMosbus.moveToThread(self.threadMosbus)
+        self.threadMosbus.started.connect(self.updateMosbus.run)
+        self.threadMosbus.start()
+
         mixer.init()
         self.klik = mixer.Sound(dir + '/ICON/CLICK.mp3')
 
@@ -631,7 +664,7 @@ class Ui_MainWindow(object):
         self.rem = 0
 
     def writeModbus(self):
-        register0 = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+        register0 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         register0[0] = self.ZP1DI
         register0[1] = self.ZP2DI
         register0[2] = self.ZP3DI
@@ -649,23 +682,26 @@ class Ui_MainWindow(object):
         register0[14] = self.brPosDNDI
         register0[15] = self.ackTBIDI
 
-        bin2dec = 0
-        for i, x in enumerate(register0):
-            bin2dec += register0[i] * 2**i
-        is_ok = c.write_multiple_registers(0, [bin2dec])
-        if is_ok:
-            pass
-        else:
-            print('gagal write holding register')
+        self.updateMosbus.writeHolding(register0)
+        # bin2dec = 0
+        # for i, x in enumerate(register0):
+        #     bin2dec += register0[i] * 2**i
+        # is_ok = c.write_multiple_registers(0, [bin2dec])
+        # if is_ok:
+        #     pass
+        # else:
+        #     print('gagal write holding register')
 
     def readModbus(self):
-        data = c.read_holding_registers(0, 1)
-        if data == None:
-            data = [0]
-            print('gagal read holding register')
+        # data = c.read_holding_registers(0, 1)
+        # if data == None:
+        #     data = [0]
+        #     print('gagal read holding register')
+
+        data = self.updateMosbus.readHolding()
+        data = data[0]
 
         register0 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        data = data[0]
         for i in range(16):
             register0[i] = data % 2
             data = data // 2
