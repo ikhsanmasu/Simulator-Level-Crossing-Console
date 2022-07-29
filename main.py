@@ -17,10 +17,8 @@ from PyQt5.QtCore import QObject, QThread, pyqtSignal, QTimer
 from pyModbusTCP.client import ModbusClient
 
 dir = os.getcwd()
-file = open(dir + "/ICON/IP HIMA.txt","r")
-IP_HIMA = str(file.read())
-c = ModbusClient(host=IP_HIMA, port=502, auto_open=True, debug=False)
-
+ipDefault = "10.10.3.106"
+c = ModbusClient(host=ipDefault, port=502, auto_open=True, debug=False)
 # multi threading untuk nyalakan alarm
 class alarmSoundEfect(QObject):
     mixer.init()
@@ -61,12 +59,14 @@ class buzzerSoundEfect(QObject):
     def __init__(self):
         super(buzzerSoundEfect, self).__init__()
         self._buzzerBunyi = 0
+        self.numpangFlashing = 0
 
     def run(self):
         while True:
             if self._buzzerBunyi:
                 self.buzzerSound.play()
                 time.sleep(self.buzzerSound.get_length())
+
 
     def bunyiBuzzerStop(self):
         self._buzzerBunyi = 0
@@ -79,27 +79,30 @@ class modbusClass(QObject):
         super(modbusClass, self).__init__()
         self.readData = [0]
         self.writeData = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        self.statusModbus = "Tidak Terhubung"
     def run(self):
         while True:
             self.readData = c.read_holding_registers(0, 1)
             if self.readData == None:
                 self.readData = [0]
-                print('gagal read holding register')
-
             bin2dec = 0
             for i, x in enumerate(self.writeData):
                 bin2dec += self.writeData[i] * 2 ** i
+
             is_ok = c.write_multiple_registers(0, [bin2dec])
-            if is_ok:
-                pass
+            if is_ok and (self.readData != None):
+                self.statusModbus = "Terhubung"
             else:
-                print('gagal write holding register')
+                self.statusModbus = "Tidak Terhubung"
 
     def readHolding(self):
         return self.readData
 
     def writeHolding(self, data):
         self.writeData = data
+
+    def status(self):
+        return self.statusModbus
 
 class Ui_MainWindow(object):
     def __init__(self):
@@ -135,6 +138,15 @@ class Ui_MainWindow(object):
         self.rem = 0 # perintah rem perintang
         self.derajatJPL = 0 # posisi JPL diwakilkan angka 0-9 mengartikan posisi per 10 derajat
         self.bunyikanAlarm = 0
+        self.flash = 0
+        self.cancleFlash = 0
+        self.ackIND = 0
+
+        #variable simulator hima
+        self.occEar = 0
+        self.occWar = 0
+        self.occ = 0
+        self.bzStp = 1
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -319,6 +331,38 @@ class Ui_MainWindow(object):
         self.Lampu_JPLBawah_R.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
         self.Lampu_JPLBawah_R.setScaledContents(True)
         self.Lampu_JPLBawah_R.setObjectName("RIGHT_JPL_R")
+        self.frame_2 = QtWidgets.QFrame(self.centralwidget)
+        self.frame_2.setGeometry(QtCore.QRect(200, 40, 161, 131))
+        self.frame_2.setStyleSheet("background-color: rgb(255, 255, 127);\n"
+                                   "border-color: rgb(197, 197, 197);")
+        self.frame_2.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.frame_2.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.frame_2.setObjectName("frame_2")
+        self.PAKAIHIMA = QtWidgets.QCheckBox(self.frame_2)
+        self.PAKAIHIMA.setGeometry(QtCore.QRect(20, 20, 111, 17))
+        self.PAKAIHIMA.setChecked(True)
+        self.PAKAIHIMA.setTristate(False)
+        self.PAKAIHIMA.setObjectName("PAKAIHIMA")
+        self.IPHIMA = QtWidgets.QLineEdit(self.frame_2)
+        self.IPHIMA.setGeometry(QtCore.QRect(20, 50, 113, 20))
+        self.IPHIMA.setStyleSheet("background-color: rgb(255, 255, 255);")
+        self.IPHIMA.setObjectName("IPHIMA")
+        self.UPDATEIP = QtWidgets.QPushButton(self.frame_2)
+        self.UPDATEIP.setGeometry(QtCore.QRect(40, 70, 71, 21))
+        self.UPDATEIP.setStyleSheet("background-color: rgb(204, 204, 204);")
+        self.UPDATEIP.setObjectName("UPDATEIP")
+        self.errormessage = QtWidgets.QLabel(self.frame_2)
+        self.errormessage.setGeometry(QtCore.QRect(20, 100, 121, 16))
+        self.errormessage.setText("")
+        self.errormessage.setObjectName("errormessage")
+        MainWindow.setCentralWidget(self.centralwidget)
+        self.menubar = QtWidgets.QMenuBar(MainWindow)
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1351, 26))
+        self.menubar.setObjectName("menubar")
+        MainWindow.setMenuBar(self.menubar)
+        self.statusbar = QtWidgets.QStatusBar(MainWindow)
+        self.statusbar.setObjectName("statusbar")
+        MainWindow.setStatusBar(self.statusbar)
 
         # tambahan selain dari QT
 
@@ -375,13 +419,13 @@ class Ui_MainWindow(object):
 
         # timer baca modbus dan update indikasi console
         self.timerINDConsole = QtCore.QTimer()
-        self.timerINDConsole.setInterval(800)
+        self.timerINDConsole.setInterval(200)
         self.timerINDConsole.timeout.connect(self.readModbus)
         self.timerINDConsole.start()
 
         # timer update modbus write
         self.timerWriteModbus = QtCore.QTimer()
-        self.timerWriteModbus.setInterval(2000)
+        self.timerWriteModbus.setInterval(200)
         self.timerWriteModbus.timeout.connect(self.writeModbus)
         self.timerWriteModbus.start()
 
@@ -394,11 +438,15 @@ class Ui_MainWindow(object):
         self.bunyiAlarm.nong.connect(self.flopLampuJPL)
         self.threadAlarm.start()
 
+        # threading modbus
         self.threadMosbus = QThread()
         self.updateMosbus= modbusClass()
         self.updateMosbus.moveToThread(self.threadMosbus)
         self.threadMosbus.started.connect(self.updateMosbus.run)
         self.threadMosbus.start()
+
+
+        self.UPDATEIP.clicked.connect(self.updateIPMODBUS)
 
         mixer.init()
         self.klik = mixer.Sound(dir + '/ICON/CLICK.mp3')
@@ -417,32 +465,27 @@ class Ui_MainWindow(object):
         self.ABCD_HDL.setText(_translate("MainWindow", "A/B/C/D-HDL-DI"))
         self.label.setText(_translate("MainWindow", "ACK-IND"))
         self.label_2.setText(_translate("MainWindow", "PANEL TBI"))
+        self.PAKAIHIMA.setText(_translate("MainWindow", "HIMA"))
+        self.IPHIMA.setText(_translate("MainWindow", "10.10.3.106"))
+        self.UPDATEIP.setText(_translate("MainWindow", "UPDATE IP"))
 
-    # list indikasi di JPL
-    # 1. ACK-DO = indikasi output dari F30 ke Backoff TBI
-    # 2. DIRECTION A = indikasi kedatangan kereta ke arah timur
-    # 3. DIRECTION B = indikasi kedatangan kereta ke arah barat
-    # 4. JPL Atas dan Bawah =  animasi buka tutup JPL
-    # 5. Lampu JPL = atas kiri kanan dan bawah kiri kanan
-    # 6. Barier UP = JPL terdeteksi posisi atas
-    # 7. Barier DN = JPL terdeteksi posisi bawah
-    # 8. Communication = komunikasi?
-    # 9. Power = ?
-    # 10. Buzzer = bunyi buzzer dari perintah F30
-    # 11. Alarm
-    # 12. output ACK DO to TBI
+    ################################ list indikasi di JPL ######################################
     def updateINDConsole(self):
         # 1. ACK-DO
         if self.ackDO:
             self.ACK_REQUEST_DO.setPixmap(QtGui.QPixmap(dir + "/ICON/led-yellow-on.png"))
         else:
             self.ACK_REQUEST_DO.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
+
         # 2. DIRECTION A
+        # menggunakan hima
         if self.dirEarDO:
             self.DIRECTION_A.setPixmap(QtGui.QPixmap(dir + "/ICON/direction-a-on.png"))
         else:
             self.DIRECTION_A.setPixmap(QtGui.QPixmap(dir + "/ICON/direction-a-off"))
+
         # 3. DIRECTION B
+        # mengguunakan hima
         if self.dirWarDO:
             self.DIRECTION_B.setPixmap(QtGui.QPixmap(dir + "/ICON/direction-b-on.png"))
         else:
@@ -485,19 +528,33 @@ class Ui_MainWindow(object):
                 self.bunyiAlarm.bunyiAlarmStart()
             else:
                 self.bunyiAlarm.bunyiAlarmStop()
-        # 12. Indikasi ACK-IND di pale TBI, nyala saat request ack ditekan, padam saat console ack
-        if self.ackDO == 1:
-            self.ackTBIDI = 0
 
-        if self.ackTBIDI:
+        # 12. Indikasi ACK-IND di panel TBI, nyala saat request ack ditekan, padam saat console ack
+        if self.ackDO == 1:
+            self.ackIND = 0
+
+        if self.ackIND:
             self.ACK_REQUEST_DO.setPixmap(QtGui.QPixmap(dir + "/ICON/led-yellow-on.png"))
         else:
             self.ACK_REQUEST_DO.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
 
+        # 14. Update status Modbus
+        self.errormessage.setText(self.updateMosbus.status())
+        if self.updateMosbus.status() == "Terhubung":
+            self.errormessage.setStyleSheet("color: green")
+        else:
+            self.errormessage.setStyleSheet("color: red")
+    #13
+    def updateIPMODBUS(self):
+        self.errormessage.setText("Menghubungkan...")
+        self.errormessage.setStyleSheet("color: yellow")
+        c.host = self.IPHIMA.text()
+
     # 4. JPL Atas dan Bawah
     def updateJPL(self):
+
         # posisi JPL diwakilkan angka 0-9 mengartikan posisi per 10 derajat
-        if self.derajatJPL >= 0 and self.derajatJPL < 9 and (self.tutupPerintang or self.BRDNDO)  and not self.rem:
+        if self.derajatJPL >= 0 and self.derajatJPL < 9 and (self.tutupPerintang or self.BRDNDO) and not self.rem:
             self.derajatJPL += 1
         elif self.derajatJPL > 0 and self.derajatJPL <= 9 and (self.bukaPerintang or self.BRUPDO) and not self.rem:
             self.derajatJPL -= 1
@@ -506,9 +563,11 @@ class Ui_MainWindow(object):
         if self.derajatJPL == 0:
             self.brPosUPDI = 1
             self.bukaPerintang = 0
+
         if self.derajatJPL == 9:
             self.brPosDNDI = 1
             self.tutupPerintang = 0
+
         if self.derajatJPL > 0 and self.derajatJPL < 9 :
             self.brPosUPDI = 0
             self.brPosDNDI = 0
@@ -534,20 +593,7 @@ class Ui_MainWindow(object):
         self.Lampu_JPLBawah_L.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
         self.Lampu_JPLBawah_R.setPixmap(QtGui.QPixmap(dir + "/ICON/led-off.png"))
 
-    # list pengolahan push button console
-    # 1. ACK Console PB DI
-    # 2. Buzzer PB DI
-    # 3. Mode Auto
-    # 4. Mode Semi Auto
-    # 5. Mode Manual
-    # 6. Posisi JPL UP
-    # 7. Posisi JPL DN
-    # 8. ACK dari TBI PB DI
-    # 9. triger ZP1
-    # 10. triger ZP2
-    # 11. triger ZP3
-    # 12. HDL DI atau informasi langsungan
-
+    ############################ list pengolahan push button console ####################################
     # 1. ACK Console PB DI
     def ackConsolePressed(self):
         self.ackConsoleDI = 1
@@ -600,10 +646,11 @@ class Ui_MainWindow(object):
     # 8. ACK dari TBI
     def ackTBIPressed(self):
         self.ackTBIDI = 1
+        self.ackIND = 1
         self.writeModbus()
+
     def ackTBIReleased(self):
-        # self.ackTBIDI = 0
-        pass
+        self.ackTBIDI = 0
 
     # 9. triger ZP1
     def ZP1Pressed(self):
@@ -616,6 +663,7 @@ class Ui_MainWindow(object):
     def ZP2Pressed(self):
         self.ZP2DI = 1
         self.writeModbus()
+
     def ZP2Released(self):
         self.ZP2DI = 0
 
@@ -623,15 +671,19 @@ class Ui_MainWindow(object):
     def ZP3Pressed(self):
         self.ZP3DI = 1
         self.writeModbus()
+
     def ZP3Released(self):
         self.ZP3DI = 0
 
     # 12. HDL DI / informasi kereta langsungan
     def HDLPressed(self):
         self.ABCDHDLDI = 1
+        self.ackIND = 1
         self.writeModbus()
+
     def HDLReleased(self):
         self.ABCDHDLDI = 0
+        pass
 
     # logic internal console
     # nyala mati alarm ketika mode manual
@@ -664,56 +716,103 @@ class Ui_MainWindow(object):
         self.rem = 0
 
     def writeModbus(self):
-        register0 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        register0[0] = self.ZP1DI
-        register0[1] = self.ZP2DI
-        register0[2] = self.ZP3DI
-        register0[3] = self.ABCDHDLDI
-        register0[4] = 0
-        register0[5] = 0
-        register0[6] = 0
-        register0[7] = 0
-        register0[8] = self.ackConsoleDI
-        register0[9] = self.buzzerStopDI
-        register0[10] = self.brAutoDI
-        register0[11] = self.brSemiAutoDI
-        register0[12] = self.brManualDI
-        register0[13] = self.brPosUPDI
-        register0[14] = self.brPosDNDI
-        register0[15] = self.ackTBIDI
+        if self.PAKAIHIMA.isChecked():
+            register0 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            register0[0] = self.ZP1DI
+            register0[1] = self.ZP2DI
+            register0[2] = self.ZP3DI
+            register0[3] = self.ABCDHDLDI
+            register0[4] = 0
+            register0[5] = 0
+            register0[6] = 0
+            register0[7] = 0
+            register0[8] = self.ackConsoleDI
+            register0[9] = self.buzzerStopDI
+            register0[10] = self.brAutoDI
+            register0[11] = self.brSemiAutoDI
+            register0[12] = self.brManualDI
+            register0[13] = self.brPosUPDI
+            register0[14] = self.brPosDNDI
+            register0[15] = self.ackTBIDI
 
-        self.updateMosbus.writeHolding(register0)
-        # bin2dec = 0
-        # for i, x in enumerate(register0):
-        #     bin2dec += register0[i] * 2**i
-        # is_ok = c.write_multiple_registers(0, [bin2dec])
-        # if is_ok:
-        #     pass
-        # else:
-        #     print('gagal write holding register')
+            self.updateMosbus.writeHolding(register0)
+
+        else:
+            # occ
+            if (self.ZP1DI or self.ackTBIDI or self.ABCDHDLDI) and not self.occWar:
+                self.occEar = 1
+            elif self.ZP2DI:
+                self.occEar = 0
+
+            if self.ZP3DI and not self.occEar:
+                self.occWar = 1
+            elif self.ZP2DI:
+                self.occWar = 0
+
+            self.occ = self.occEar or self.occWar
+
+            # alarmDO
+            if self.occ and not self.brManualDI:
+                self.alarmDO = 1
+            elif not self.occ or self.brManualDI:
+                self.alarmDO = 0
+
+            # buzzerDO
+            if self.buzzerStopDI:
+                self.bzStp = 0
+            if not self.bzStp and not self.occ:
+                self.bzStp = 1
+
+            if self.occ and self.bzStp:
+                self.buzzerDO = 1
+            elif not self.occ or not self.bzStp:
+                self.buzzerDO = 0
+
+            # BR UP or DN
+            if self.occ and self.brAutoDI and not self.brPosDNDI and not self.BRUPDO:
+                self.BRDNDO = 1
+            elif not self.occ or not self.brAutoDI or self.brPosDNDI or self.BRUPDO:
+                self.BRDNDO = 0
+
+            if not self.occ and self.brAutoDI and not self.brPosUPDI and not self.BRDNDO:
+                self.BRUPDO = 1
+            elif self.occ or not self.brAutoDI or self.brPosUPDI or self.BRDNDO:
+                self.BRUPDO = 0
+
+            # ackDO ke TBI forward dari ack console atau deteksi posisi down saat mode auto
+            if self.ackConsoleDI or (self.brAutoDI and self.brPosDNDI):
+                self.ackDO = 1
+            elif not(self.ackConsoleDI or (self.brAutoDI and self.brPosDNDI)):
+                self.ackDO = 0
+
+            if self.occEar:
+                self.dirEarDO = 1
+            elif not self.occEar:
+                self.dirEarDO = 0
+
+            if self.occWar:
+                self.dirWarDO = 1
+            elif not self.occWar:
+                self.dirWarDO = 0
 
     def readModbus(self):
-        # data = c.read_holding_registers(0, 1)
-        # if data == None:
-        #     data = [0]
-        #     print('gagal read holding register')
+        if self.PAKAIHIMA.isChecked():
+            data = self.updateMosbus.readHolding()
+            data = data[0]
 
-        data = self.updateMosbus.readHolding()
-        data = data[0]
+            register0 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            for i in range(16):
+                register0[i] = data % 2
+                data = data // 2
 
-        register0 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        for i in range(16):
-            register0[i] = data % 2
-            data = data // 2
-
-        self.buzzerDO = register0[8]
-        self.alarmDO = register0[9]
-        self.dirWarDO = register0[10]
-        self.dirEarDO = register0[11]
-        self.BRUPDO = register0[12]
-        self.BRDNDO = register0[13]
-        self.COMMDO = register0[14]
-        self.ackDO = register0[15]
+            self.buzzerDO = register0[8]
+            self.alarmDO = register0[9]
+            self.dirWarDO = register0[10]
+            self.dirEarDO = register0[11]
+            self.BRUPDO = register0[12]
+            self.BRDNDO = register0[13]
+            self.COMMDO = register0[14]
+            self.ackDO = register0[15]
 
         self.updateINDConsole()
 
