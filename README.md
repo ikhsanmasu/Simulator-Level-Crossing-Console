@@ -6,6 +6,7 @@ There are 3 modes:
 2. Semi-Auto: the barrier is controlled by the operator and the rest is automatic
 3. Manual: all the processes are manual, the console only tells when the sensor is triggered
 
-![image](https://github.com/ikhsanmasu/Simulator-Level-Crossing-Console/assets/76894210/c43a9473-2481-4438-bab1-be5b5db30e76)
+![image](https://github.com/ikhsanmasu/Simulator-Level-Crossing-Console/assets/76894210/af2ba661-c0a5-400b-a6d8-37a38f5928a3)
+
 
 try this app: https://drive.google.com/file/d/1GTd03Z9wcjzxKA5EhdPDK0V67CIYxoTJ/view?usp=sharing
